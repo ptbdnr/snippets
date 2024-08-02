@@ -1,12 +1,19 @@
+# ref:
+# * https://learn.microsoft.com/en-us/azure/search/search-lucene-query-architecture
+# * https://docs.microsoft.com/en-us/azure/search/query-lucene-syntax#bkmk_ranking
+# * https://learn.microsoft.com/en-us/azure/search/hybrid-search-overview
+
 import os
 import logging
 from collections.abc import Iterable
 from typing import List, Dict
+from enum import Enum
 
 from azure.core.credentials import AzureKeyCredential
 from azure.search.documents import SearchClient
 from azure.search.documents.indexes import SearchIndexClient
 from azure.search.documents.indexes.models import (
+    RawVectorQuery,
     SearchIndex, CorsOptions, ScoringProfile,
     SimpleField, ComplexField, SearchableField, SearchField,
     SearchFieldDataType,
@@ -17,9 +24,12 @@ from src.search_engine import SearchEngine
 from src.encrypt import mask_key
 
 # constants
-ENV_KEY_SEARCH_ENGINE_AISEARCH_ENDPOINT = os.getenv('SEARCH_ENGINE_AISEARCH_ENDPOINT')
-ENV_KEY_SEARCH_ENGINE_AISEARCH_KEY = os.getenv('SEARCH_ENGINE_AISEARCH_KEY')
-ENV_KEY_SEARCH_ENGINE_AISEARCH_INDEX_NAME = os.getenv('SEARCH_ENGINE_AISEARCH_INDEX_NAME')
+ENV_KEY_SEARCH_ENGINE_AISEARCH_ENDPOINT = os.getenv(
+    'SEARCH_ENGINE_AISEARCH_ENDPOINT')
+ENV_KEY_SEARCH_ENGINE_AISEARCH_KEY = os.getenv(
+    'SEARCH_ENGINE_AISEARCH_KEY')
+ENV_KEY_SEARCH_ENGINE_AISEARCH_INDEX_NAME = os.getenv(
+    'SEARCH_ENGINE_AISEARCH_INDEX_NAME')
 
 FIELD_TYPE_MAPPING = {
     'simple': SimpleField,
@@ -33,6 +43,41 @@ SEARCH_FIELD_DATA_TYPE_MAPPING = {
     'vector': SearchFieldDataType.Collection(SearchFieldDataType.Single),
 }
 
+NUMBER_OF_NEIGHBORS = 999  # number of neighbors to return
+NUMBER_OF_NEIGHBORS_FOR_TEXT_SEARCH = NUMBER_OF_NEIGHBORS
+NUMBER_OF_NEIGHBORS_FOR_VECTOR_SEARCH = NUMBER_OF_NEIGHBORS
+DEFAULT_SEMANTIC_SCORE_VALUE = 0.0  # to avoid NoneType error
+SEARCH_FIELDS = ['content_text']
+VECTOR_FIELDS = 'content_vector'
+QUERY_LANGUAGE = 'en-us'
+SELECT_FIELDS = ['foo', 'bar', 'buz']
+
+
+class TextSearchType(Enum):
+    SIMPLE = 'simple'
+    FULL = 'full'
+
+
+class VectorSearchType(Enum):
+    APPROXIMATE = 'approximate'
+    EXACT = 'exact'
+
+
+class TextRankingStrategy(Enum):
+    BM25 = 'bm25'
+    SEMANTIC = 'semantic'
+
+
+class VectorRankingStrategy(Enum):
+    COSINE = 'cosine'
+    # EUCLIDEAN = 'euclidean'
+    # DOT_PRODUCT = 'dot_product'
+
+
+class ReRankingStrategy(Enum):
+    RRF = 'rrf'  # Reciprocal Rank Fusion
+    SEMANTIC = 'semantic'
+
 
 class AzureAISearchEngine(SearchEngine):
     """
@@ -41,14 +86,17 @@ class AzureAISearchEngine(SearchEngine):
     _service_endpoint: str
     _key: str
     _index_name: str
+    _semantic_search_config_name: str = None
     search_client: SearchClient = None
     search_index_client: SearchIndexClient = None
 
-    def __init__(self,
-                 service_endpoint: str = None,
-                 key: str = None,
-                 index_name: str = None,
-                 ):
+    def __init__(
+        self,
+        service_endpoint: str = None,
+        key: str = None,
+        index_name: str = None,
+        semantic_search_config_name: str = None
+    ):
         logging.info("Start AzureAISearch configuration ...")
 
         self._service_endpoint = service_endpoint if service_endpoint \
@@ -57,6 +105,7 @@ class AzureAISearchEngine(SearchEngine):
             else os.getenv(ENV_KEY_SEARCH_ENGINE_AISEARCH_KEY)
         self._index_name = index_name if index_name \
             else os.getenv(ENV_KEY_SEARCH_ENGINE_AISEARCH_INDEX_NAME)
+        self._semantic_search_config_name = semantic_search_config_name
 
         # log configuration
         logging.info(f"Azure AI Search service_endpoint: \
@@ -126,6 +175,258 @@ class AzureAISearchEngine(SearchEngine):
         logging.info(f"Completed search text. \
             Sorted results has {len(response_list)}")
         return response_list
+
+    def _search_text(
+        self,
+        text: str,
+        text_search_type: TextSearchType = TextSearchType.SIMPLE,
+        text_ranking_strategy: TextRankingStrategy = TextRankingStrategy.BM25
+    ) -> Iterable:
+        logging.info("Start text search ...")
+
+        # initialize search client if not initialized already
+        self.__init_search_client()
+
+        # common parameters
+        kwargs = {
+            'search_text': text,
+            'search_fields': SEARCH_FIELDS,
+            'select': SELECT_FIELDS,
+            'top': NUMBER_OF_NEIGHBORS_FOR_TEXT_SEARCH,
+            # 'include_total_count': True
+        }
+
+        # search type specific parameters
+        match text_search_type:
+            case TextSearchType.SIMPLE:
+                kwargs['query_type'] = 'simple'
+            case TextSearchType.FULL:
+                kwargs['query_type'] = 'full'
+                kwargs['search_mode'] = 'any'
+            case _:
+                raise ValueError(f"Invalid search type: {text_search_type}")
+
+        # ranking strategy specific parameters
+        match text_ranking_strategy:
+            case TextRankingStrategy.BM25:
+                pass
+            case TextRankingStrategy.SEMANTIC:
+                kwargs['query_type'] = 'semantic'
+                # kwargs['query_language'] = QUERY_LANGUAGE
+                kwargs['semantic_configuration_name'] = \
+                    self._semantic_search_config_name
+
+        # search
+        logging.info(f"Start search ...: {kwargs}")
+        search_results = self.search_client.search(**kwargs)
+
+        # log total count if requested
+        if kwargs.get('include_total_count'):
+            try:
+                logging.info(f"Search results has approx. \
+                    {search_results.get_count()} items.")
+            except Exception as err:
+                logging.error("Error getting count: ", err)
+
+        # rank search results
+        match text_ranking_strategy:
+            case TextRankingStrategy.BM25:
+                response_list = [r for r in search_results]
+                results = sorted(
+                    [r for r in response_list],
+                    key=lambda r: r['@search.score'],
+                    reverse=True
+                )
+            case TextRankingStrategy.SEMANTIC:
+                response_list = [r for r in search_results]
+                results = sorted(
+                    [r for r in response_list],
+                    key=lambda r: r['@search.reranker_score']
+                    if r['@search.reranker_score'] is not None
+                    else DEFAULT_SEMANTIC_SCORE_VALUE,
+                    reverse=True
+                )
+            case _:
+                raise ValueError(f"Invalid ranking strategy: \
+                    {text_ranking_strategy}")
+
+        logging.info(f"Completed text search. \
+            Sorted results has {len(results)} items.")
+        return results
+
+    def _search_vector(
+        self,
+        vector: list,
+        vector_fields: str = VECTOR_FIELDS,
+        vector_search_type: VectorSearchType = VectorSearchType.APPROXIMATE,
+        vector_ranking_strategy: VectorRankingStrategy = VectorRankingStrategy.COSINE  # noqa: E501
+    ) -> list:
+        """
+        Search vector
+        @param vector: vector input
+        @param vector_fields: fields to search
+        @param search_type: search type
+        @param vector_ranking_strategy: ranking strategy
+        @return: search results
+        """
+        logging.info("Start search vector ...")
+
+        # initialize search client if not initialized already
+        self.__init_search_client()
+
+        kwargs = {
+            'search_text': None,
+            # 'vector': vector,
+            # 'vector_fields': vector_fields,
+            # 'top_k': NUMBER_OF_NEIGHBORS_FOR_VECTOR_SEARCH,
+            'select': SELECT_FIELDS,
+            # 'include_total_count': True
+        }
+
+        is_exhaustive: bool = None
+        match vector_search_type:
+            case VectorSearchType.APPROXIMATE:
+                is_exhaustive = False
+            case VectorSearchType.EXACT:
+                is_exhaustive = True
+            case _:
+                raise ValueError(f"Invalid search type: {vector_search_type}")
+
+        vector_query = RawVectorQuery(
+            vector=vector,
+            k=NUMBER_OF_NEIGHBORS_FOR_VECTOR_SEARCH,
+            fields=vector_fields,
+            exhaustive=is_exhaustive
+        )
+        kwargs['vector_queries'] = [vector_query]
+
+        # search
+        logging.info(f"Start search ...: {kwargs}")
+        search_results = self.search_client.search(**kwargs)
+
+        # log total count if requested
+        if kwargs.get('include_total_count'):
+            try:
+                logging.info(f"Search results has approx. \
+                    {search_results.get_count()} items.")
+            except Exception as err:
+                logging.error("Error getting count: ", err)
+
+        # rank search_results
+        # TODO
+        response_list = [r for r in search_results]
+        results = sorted(
+            [r for r in response_list],
+            key=lambda r: r['@search.score'],
+            reverse=True
+        )
+
+        logging.info(f"Completed search vector. \
+            Sorted results has {len(results)} items.")
+        return results
+
+    def _search_hybrid(
+        self,
+        text: str,
+        vector: list,
+        vector_fields: str = VECTOR_FIELDS,
+        text_search_type: TextSearchType = TextSearchType.SIMPLE,
+        text_ranking_strategy: TextRankingStrategy = TextRankingStrategy.BM25,
+        vector_search_type: VectorSearchType = VectorSearchType.APPROXIMATE,
+        vector_ranking_strategy: VectorRankingStrategy = VectorRankingStrategy.COSINE,  # noqa: E501
+        re_ranking_strategy: ReRankingStrategy = ReRankingStrategy.RRF
+    ) -> list:
+        """
+        Search text
+        @param text: search text
+        @param vector: vector input
+        @param search_type: search type, default is SearchType.APPROXIMATE
+        @param ranking_strategy: ranking strategy, default is BM25
+        @return: search results
+        """
+        logging.info("Start search text ...")
+
+        # initialize search client if not initialized already
+        self.__init_search_client()
+
+        vector_query = RawVectorQuery(
+            vector=vector,
+            k=NUMBER_OF_NEIGHBORS_FOR_VECTOR_SEARCH,
+            fields=vector_fields
+        )
+
+        # common parameters
+        kwargs = {
+            'search_text': text,
+            'search_fields': SEARCH_FIELDS,
+            'top': NUMBER_OF_NEIGHBORS_FOR_TEXT_SEARCH,
+            'vector_queries': [vector_query],
+            # 'vector': vector,
+            # 'vector_fields': vector_fields,
+            # 'top_k': NUMBER_OF_NEIGHBORS_FOR_VECTOR_SEARCH,
+            'select': SELECT_FIELDS,
+            # 'include_total_count': True
+        }
+
+        # search type specific parameters
+        match text_search_type:
+            case TextSearchType.SIMPLE:
+                kwargs['query_type'] = 'simple'
+            case TextSearchType.FULL:
+                kwargs['query_type'] = 'full'
+                kwargs['search_mode'] = 'any'
+            case _:
+                raise ValueError(f"Invalid search type: {text_search_type}")
+
+        # ranking strategy specific parameters
+        match text_ranking_strategy:
+            case TextRankingStrategy.BM25:
+                pass
+            case TextRankingStrategy.SEMANTIC:
+                kwargs['query_type'] = 'semantic'
+                # kwargs['query_language'] = QUERY_LANGUAGE
+                kwargs['semantic_configuration_name'] = \
+                    self.semantic_search_config_name
+
+        # search
+        logging.info(f"Start search ...: {kwargs}")
+        search_results = self.search_client.search(**kwargs)
+
+        # log total count if requested
+        if kwargs.get('include_total_count'):
+            try:
+                logging.info(f"Search results has approx. \
+                    {search_results.get_count()} items.")
+            except Exception as err:
+                logging.error("Error getting count: ", err)
+
+        # re-rank search results
+        match re_ranking_strategy:
+            case None:
+                results = [r for r in search_results]
+            case ReRankingStrategy.RRF:
+                response_list = [r for r in search_results]
+                results = sorted(
+                    [r for r in response_list],
+                    key=lambda r: r['@search.score'],
+                    reverse=True
+                )
+            case ReRankingStrategy.SEMANTIC:
+                response_list = [r for r in search_results]
+                results = sorted(
+                    [r for r in response_list],
+                    key=lambda r: r['@search.reranker_score']
+                    if r['@search.reranker_score'] is not None
+                    else DEFAULT_SEMANTIC_SCORE_VALUE,
+                    reverse=True
+                )
+            case _:
+                raise ValueError(f"Invalid re-ranking strategy: \
+                    {re_ranking_strategy}")
+
+        logging.info(f"Completed search text. \
+            Sorted results has {len(results)} items.")
+        return results
 
     def create_index(self, index_name: str, schema: dict) -> SearchIndex:
         """
