@@ -11,9 +11,9 @@ from enum import Enum
 
 from azure.core.credentials import AzureKeyCredential
 from azure.search.documents import SearchClient
+from azure.search.documents.models import VectorizedQuery
 from azure.search.documents.indexes import SearchIndexClient
 from azure.search.documents.indexes.models import (
-    RawVectorQuery,
     SearchIndex, CorsOptions, ScoringProfile,
     SimpleField, ComplexField, SearchableField, SearchField,
     SearchFieldDataType,
@@ -292,7 +292,7 @@ class AzureAISearchEngine(SearchEngine):
             case _:
                 raise ValueError(f"Invalid search type: {vector_search_type}")
 
-        vector_query = RawVectorQuery(
+        vector_query = VectorizedQuery(
             vector=vector,
             k=NUMBER_OF_NEIGHBORS_FOR_VECTOR_SEARCH,
             fields=vector_fields,
@@ -349,7 +349,7 @@ class AzureAISearchEngine(SearchEngine):
         # initialize search client if not initialized already
         self.__init_search_client()
 
-        vector_query = RawVectorQuery(
+        vector_query = VectorizedQuery(
             vector=vector,
             k=NUMBER_OF_NEIGHBORS_FOR_VECTOR_SEARCH,
             fields=vector_fields
