@@ -1,0 +1,4 @@
+# requirements.txt
+azure-ai-inference==1.0.0b3
+python-dotenv==1.0.1
+pytest==8.3.2
