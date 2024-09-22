@@ -18,7 +18,7 @@ param appServicePlanName string
 @description('Name of the function app.')
 param functionAppName string
 
-@description('Name of the Docker image.')
+@description('Name of the Docker image. TODO: NOT WORKING IN BICEP, TRY AZ CLI')
 param imageName string
 
 @description('Tag of the Docker image.')
@@ -73,11 +73,12 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
 }
 
 // Create Function App
+// TODO: NOT WORKING, TRY AZ CLI. ALSO, THE IMAGE SHOULD BE PUSHED TO THE REGISTRY FIRST
 // ref: https://learn.microsoft.com/en-us/azure/templates/microsoft.web/sites?pivots=deployment-language-bicep#resource-format
 resource functionApp 'Microsoft.Web/sites@2022-09-01' = {
   name: functionAppName
   location: location
-  kind: 'functionapp, linux, container'
+  kind: 'functionapp,linux,container'
   properties: {
     serverFarmId: appServicePlan.id
     siteConfig: {

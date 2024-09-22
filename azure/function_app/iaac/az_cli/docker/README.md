@@ -18,7 +18,7 @@ az --version
 ```shell
 az group create 
     --name $RESOURGE_GROUP_NAME 
-    --location $REGION
+    --location $LOCATION
 ```
 
 2. Create a Container Registry
@@ -42,7 +42,6 @@ ref: https://learn.microsoft.com/en-us/cli/azure/storage/account?view=azure-cli-
 ```shell
 az storage account create \ 
     --resource-group $RESOURCE_GROUP_NAME \ 
-    --location $REGION \ 
     --name $STORAGE_NAME \ 
     --sku Standard_LRS
 ```
@@ -56,9 +55,7 @@ ref: https://learn.microsoft.com/en-us/cli/azure/appservice/plan?view=azure-cli-
 ```shell
 az appservice plan create \ 
     --resource-group $RESOURCE_GROUP_NAME \ 
-    --location $REGION \ 
     --name $APP_PLAN_NAME
-    --is-linux
 ```
 
 5. Create an Azure Function App
@@ -71,12 +68,13 @@ Docker image deployment may take several minutes.
 
 Remember to configure CORS as appropriate.
 
+This assumes that a Docker image is already deployed within the Azure Continer Registry
+
 ```shell
 az functionapp create \ 
   --resource-group $RESOURGE_GROUP_NAME \ 
   --plan $APP_PLAN_NAME \ 
   --name $APP_NAME \ 
-  --os-type Linux
   --runtime python
   --runtime-version 3.11
   --storage-account $STORAGE_NAME \ 
