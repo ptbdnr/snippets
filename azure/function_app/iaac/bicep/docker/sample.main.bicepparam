@@ -1,0 +1,10 @@
+using './main.bicep'
+
+// param resourceGroupName = 'foo'
+param location = 'uksouth'
+param registryName = 'acrfoo'
+param storageAccountName = 'storagefoo'
+param appServicePlanName = 'planfoo'
+param functionAppName = 'funcfoo'
+param imageName = 'imagefoo'
+param imageTag = 'latest'
