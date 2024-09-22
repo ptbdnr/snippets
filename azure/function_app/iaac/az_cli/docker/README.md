@@ -1,99 +1,30 @@
-References:
-1. https://learn.microsoft.com/en-us/azure/azure-functions/functions-run-local?tabs=windows%2Cisolated-process%2Cnode-v4%2Cpython-v2%2Chttp-trigger%2Ccontainer-apps&pivots=programming-language-python
-2. https://learn.microsoft.com/en-us/azure/azure-functions/functions-deploy-container-apps?tabs=acr%2Cbash&pivots=programming-language-python
+# IaaC with Azure CLI
 
-# Requirements
+
+## Requirements
+
 * Azure subscription
 * Azure CLI: to sing-in to the Azure account
-* Azure Functions Core Tools: to initialise a project
-* Docker account (Docker ID) and Docker running on local computer: to build a docker image
 
 ```shell
 # Azure CLI expected version: 2.61 or higher
 az --version
-# Azure Functions Core Tools expected version: 4.x or higher
-func upgrade
-func --version
-# Docker expected version 27.x or higher
-docker --version
 ```
 
-# Create
+## Create Azure resources
 
-1. Create a local project (optionally add `--docker` to create a Dockerfile)
-```shell
-func init \ 
-    --worker-runtime python \ 
-    --model V2
-```
+1. Create a Resource Group
 
-3. Create a a local function that can be triggered by a HTTP request and has a route called `FUNCTION_NAME` (e.g. httpTriggerName)
-```shell
-func new \ 
-    --template "Http Trigger" \ 
-    --name $FUNCTION_NAME
-```
-
-4. Add a default Dockerfile to an existing project
-ref: https://learn.microsoft.com/en-us/azure/azure-functions/functions-core-tools-reference?tabs=v2#func-init
-```shell
-func init --docker-only
-```
-
-5. Create and activate a virtual environment
-```shell
-python -m venv .venv
-source .venv/bin/activate
-```
-
-
-# Start the FUnctions runtime and test locally
-
-1. Start the functions runtime
-```shell
-func start
-```
-
-2. Run a local function (in a new terminal)
-endpoint pattern `http://localhost:<PORT>/api/<FUNCTION_NAME>`
-
-```shell
-curl --get http://localhost:7071/api/$FUNCTION_NAME?name=Joe%20Doe
-```
-or
-```bash
-curl --request POST http://localhost:7071/api/$FUNCTION_NAME --data '{"name":"Joe Doe"}'
-```
-
-3. Build Docker image locally and verify by running it locally. `DOCKER_ID` is the Docker Hub account ID, `IMAGE_NAME` is an arbitrary project name, `TAG` is an arbitrary tag (e.g. v1.0.0). Note the dot `.` indicating that the path to the Dockerfile is the present working working directory.
-
-NB: Azure CLI uses the requests library which looks for the environment variable `REQUESTS_CA_BUNDLE`. ensure this is pointing to the location of our '.pem' certificate file (if applicable): `export REQUESTS_CA_BUNDLE=/PATH/TO/FILE.pem`
-NB2: alternative is to upgrade pip and use-feature=truststore
-```shell
-RUN pip install --trusted-host pypi.org --upgrade pip 
-#Non-Ideal fix as SSL verification is disabled for Pip upgrade
-#Either find way to trust certificate - or use more up to date base image
-RUN pip install -r /requirements.txt --use-feature=truststore
-```
-
-```shell
-docker build --progress=plain --no-cache --tag $DOCKER_ID/$IMAGE_NAME:$TAG .
-# or build directly on Azure: az acr build --registry $REGISTRY_NAME --image $LOGIN_SERVER/$PATH/$IMAGE_NAME:$TAG .
-docker run -p 8080:80 -it $DOCKER_ID/$IMAGE_NAME:$TAG
-```
-
-
-# Publish to Azure
-
-## Create a Resource Group
 ```shell
 az group create 
     --name $RESOURGE_GROUP_NAME 
     --location $REGION
 ```
 
-## Create a Container Registry
+2. Create a Container Registry
+
 ref: https://learn.microsoft.com/en-us/cli/azure/acr?view=azure-cli-latest#az-acr-create
+
 ```shell
 az acr create \ 
     --resource-group $RESOURGE_GROUP_NAME \ 
@@ -102,24 +33,12 @@ az acr create \
     --admin-enabled true
 ```
 
-## Push Docker image to Container Registry
-ref: https://learn.microsoft.com/en-us/cli/azure/acr?view=azure-cli-latest#az-acr-login
-```shell
-# sign int ot the container registry instance. alternative: docker login $REGISTRY_NAME.azurecr.io
-az acr login --name $REGISTRY_NAME
-# tag the Docker image where `DOCKER_ID` is your Docker account Id, `LOGIN_SERVER` is the name of the registry login server (eg. $REGISTRY_NAME.azurecr.io), so that it can be pushed to the private registry. IMAGE_NAME may contain '/'. `TAG` is optional, default value is `latest`
-docker tag $DOCKER_ID/$IMAGE_NAME:$TAG $LOGIN_SERVER/$IMAGE_NAME:$TAG
-# pus the image to the registry instance
-docker push $LOGIN_SERVER/$IMAGE_NAME:$TAG
-```
+3. Create a Storage Account
 
-Verify that the image is in the container repository by pulling it
-```shell
-docker pull $LOGIN_SERVER/$IMAGE_NAME:$TAG
-```
+This is used by the Function App.
 
-## Create an Storage Account (used by the Function App)
 ref: https://learn.microsoft.com/en-us/cli/azure/storage/account?view=azure-cli-latest#az-storage-account-create
+
 ```shell
 az storage account create \ 
     --resource-group $RESOURCE_GROUP_NAME \ 
@@ -128,8 +47,12 @@ az storage account create \
     --sku Standard_LRS
 ```
 
-# Create an App Service Plan (hosts the Function App)
+4. Create an App Service Plan
+
+This hosts the Function App
+
 ref: https://learn.microsoft.com/en-us/cli/azure/appservice/plan?view=azure-cli-latest#az-appservice-plan-create
+
 ```shell
 az appservice plan create \ 
     --resource-group $RESOURCE_GROUP_NAME \ 
@@ -138,10 +61,16 @@ az appservice plan create \
     --is-linux
 ```
 
-## Create an Azure Function App (NB: ClickOps only supports CD from GitHub)
+5. Create an Azure Function App
+
+NB: ClickOps only supports CD from GitHub
+
 ref: https://learn.microsoft.com/en-us/cli/azure/functionapp?view=azure-cli-latest#az-functionapp-create
+
 Docker image deployment may take several minutes.
+
 Remember to configure CORS as appropriate.
+
 ```shell
 az functionapp create \ 
   --resource-group $RESOURGE_GROUP_NAME \ 
@@ -152,11 +81,4 @@ az functionapp create \
   --runtime-version 3.11
   --storage-account $STORAGE_NAME \ 
   --image $LOGIN_SERVER/$IMAGE_NAME:$TAG
-```
-
-
-## [Optional] Deploy project files directly to existing Function App using zip deployment
-ref: https://learn.microsoft.com/en-us/azure/azure-functions/functions-core-tools-reference?tabs=v2#func-azure-functionapp-publish
-```shell
-func azure functionapp publish $APP_NAME
 ```
