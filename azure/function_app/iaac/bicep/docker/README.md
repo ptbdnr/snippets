@@ -44,7 +44,7 @@ Docker image deployment may take several minutes.
 Remember to configure CORS as appropriate.
 
 
-You can deploy this Bicep template using the Azure CLI:
+Deploy this Bicep template using the Azure CLI:
 
 ref: https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/deploy-cli
 

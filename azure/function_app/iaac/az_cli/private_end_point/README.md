@@ -33,6 +33,7 @@ connection_string = f"DefaultEndpointsProtocol=https;AccountName={storage_accoun
 az --version
 ```
 
+
 ## Create Azure resources
 
 1. Create a Resource Group
