@@ -16,7 +16,7 @@ status: in preview (9 Oct 2024)
 
 Not all AI models on Azure support this deployment process.
 This process requires multiple criteria:
-1) The model on Azure must support serverless API deployment mode
+1) The model on Azure must support the deployment option: "Serverless API"
 2) The model card on Azure must surface a ModelId
 4) Available only to users whose Azure subscription belongs to a billing account in a country where the model provider has made the offer available. And the model is to be deployed in a region where it is enabled See https://learn.microsoft.com/en-us/azure/ai-studio/how-to/deploy-models-serverless-availability 
     * Error: `MarketplaceSubscriptionpurchaseEligibilityCheckFailed` Message: Marketplace Subscription purchase eligibility check failed, error message [The purchasing store is not eligible for purchase of this offer due to Second Party store restrictions. Please verify the offer has the tag "hideFromSaasBlade" set to true.].
