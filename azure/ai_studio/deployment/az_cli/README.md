@@ -13,9 +13,20 @@ az --version
 az ml -h
 ```
 
-## Deploy a serverless API subscription to an AI model 
+## Deploy an AI model as a serverless API with subscription
 ref. https://learn.microsoft.com/en-us/azure/ai-studio/how-to/deploy-models-serverless?tabs=cli
 status: in preview (9 Oct 2024)
+
+Not all AI models on Azure support this deployment process.
+This process requires multiple criteria:
+1) The model on Azure must support serverless API deployment mode
+2) The model card on Azure must surface a ModelId
+4) Available only to users whose Azure subscription belongs to a billing account in a country where the model provider has made the offer available. And the model is to be deployed in a region where it is enabled See https://learn.microsoft.com/en-us/azure/ai-studio/how-to/deploy-models-serverless-availability 
+    * Error: `MarketplaceSubscriptionpurchaseEligibilityCheckFailed` Message: Marketplace Subscription purchase eligibility check failed, error message [The purchasing store is not eligible for purchase of this offer due to Second Party store restrictions. Please verify the offer has the tag "hideFromSaasBlade" set to true.].
+    * Error: `MarketplacePlanNotRequiredForModel` Message: Marketplace plan is not required for ModelId $MODEL_ID
+
+ModelId example, tested on 9 Oct 2024: `azureml://registries/azureml-meta/models/Meta-Llama-3-8B-Instruct`
+
 
 1. Create a Resource Group
 
@@ -60,7 +71,7 @@ Identify the model name and model ID on Azure AI Studio, and define a deployment
 ```plaintext
 $SUBSCRIPTION_NAME=Meta-Llama-3-8B-Instruct-subs
 $MODEL_ID=azureml://registries/azureml-meta/models/Meta-Llama-3-8B-Instruct
-$DEPLOYMENT_NAME=meta-llama3-8b-mydeployment
+$ENDPOINT_NAME=meta-llama3-8b-mydeployment
 ```
 
 Save the config and create the subscription
@@ -80,21 +91,21 @@ az ml marketplace-subscription list
 ```shell
 # Create a new endpoint deployment
 touch serverless_api_endpoint.yml
-echo "name: $DEPLOYMENT_NAME" >> serverless_api_endpoint.yml
+echo "name: $ENDPOINT_NAME" >> serverless_api_endpoint.yml
 echo "model_id: $MODEL_ID" >> serverless_api_endpoint.yml
 az ml serverless-endpoint create -f serverless_api_endpoint.yml
 # Verify endpoint deployment
 az ml serverless-endpoint list
 # URL: https://$DEPLOYMENT_NAME.$LOCATION.models.ai.azure.com
 # Get keys (primary and secondary)
-az ml serverless-endpoint get-credentials -n $DEPLOYMENT_NAME
+az ml serverless-endpoint get-credentials -n $ENDPOINT_NAME
 ```
 
 5. Delete an endpoint and subscription
 
 ```shell
 # Delete endpoint deployment
-az ml serverless-endpoint delete --name $DEPLOYMENT_NAME
+az ml serverless-endpoint delete --name $ENDPOINT_NAME
 # Verify endpoint deployment
 az ml serverless-endpoint list
 # Delete subscription
