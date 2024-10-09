@@ -7,6 +7,7 @@ class Seq2SeqProvider(Enum):
     MOCKUP = 'mockup'
     AI_STUDIO = 'azure_ai_studio'
     REQUEST = 'request'
+    REQUESTS = 'requests'
 
 
 class Seq2Seq(ABC):
@@ -26,6 +27,9 @@ class Seq2Seq(ABC):
             case Seq2SeqProvider.REQUEST:
                 from src.request_seq2seq import RequestSeq2Seq
                 return RequestSeq2Seq()
+            case Seq2SeqProvider.REQUESTS:
+                from src.requests_seq2seq import RequestsSeq2Seq
+                return RequestsSeq2Seq()
             case _:
                 raise ValueError(f"Invalid provider: {provider}")
 
