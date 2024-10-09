@@ -46,10 +46,11 @@ class RequestsSeq2Seq(Seq2Seq):
         logging.info(f"kwargs: {json.dumps(kwargs)}")
         
         request_data = {
-            # "input_data": { "input_string": messages },  # seq2seq
-            "input_data": { "question": messages[-1]['content'], "context": 'dummy context'},  # qna
+            "input_data": { "input_string": messages },  # seq2seq
+            # "input_data": { "question": messages[-1]['content'], "context": 'dummy context'},  # qna
             # "messages": messages, 
-            **kwargs
+            # **kwargs
+            "parameters": {**kwargs}
         }
 
         # Remove this header to have the request observe
@@ -60,16 +61,19 @@ class RequestsSeq2Seq(Seq2Seq):
             'Authorization': ('Bearer ' + self._api_key)
         }
 
-        response = requests.post(
-            url=self._endpoint_url,
-            headers=headers,
-            data=str.encode(json.dumps(request_data))
-        )
+        try:
+            response = requests.post(
+                url=self._endpoint_url,
+                headers=headers,
+                data=str.encode(json.dumps(request_data))
+            )
 
-        result = json.loads(response.text)[0]
-        # result = json.loads(response.text)['output']
-
-        logging.info("Completed chatCompletion method.")
-        logging.info(f"result: {result}")
-
-        return result
+            # result = json.loads(response.text)[0]
+            result = json.loads(response.text)['output']
+            
+            logging.info("Completed chatCompletion method.")
+            return result
+        
+        except Exception as ex:
+            logging.exception(f"{ex.code} {ex.info()} {ex.read().decode('utf8', 'ignore')}")
+            raise ex

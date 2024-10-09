@@ -45,10 +45,10 @@ class AIStudioSeq2Seq(Seq2Seq):
         logging.info("Completed AI Studio configuration.")
 
     def _init_chat_client(self) -> None:
-        credetial = AzureKeyCredential(self._api_key)
+        credential = AzureKeyCredential(self._api_key)
         self._chat_client = ChatCompletionsClient(
             endpoint=self._endpoint_url,
-            credential=credetial
+            credential=credential
         )
 
     def chat(self, messages: List[dict], **kwargs) -> str:
@@ -68,7 +68,6 @@ class AIStudioSeq2Seq(Seq2Seq):
         )
 
         result = response.choices[0].message.content
-
         logging.info("Completed chatCompletion method.")
 
         return result

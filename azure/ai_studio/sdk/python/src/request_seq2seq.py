@@ -57,10 +57,11 @@ class RequestSeq2Seq(Seq2Seq):
         logging.info(f"kwargs: {json.dumps(kwargs)}")
 
         body = str.encode(json.dumps({
-            # "input_data": { "input_string": messages }  # seq2seq
-            "input_data": { "question": messages[-1]['content'], "context": 'dummy context'},  # qna
+            "input_data": { "input_string": messages },  # seq2seq
+            # "input_data": { "question": messages[-1]['content'], "context": 'dummy context'},  # qna
             # "messages": messages,
-            **kwargs
+            # **kwargs
+            "parameters": {**kwargs}
         }))
 
         headers = {
@@ -76,10 +77,13 @@ class RequestSeq2Seq(Seq2Seq):
 
         try:
             response = urllib.request.urlopen(req)
+            
             result = response.read().decode('utf8', 'ignore')
+            # result = json.loads(response.read())['output']
+            
             logging.info("Completed chatCompletion method.")
-            logging.info(f"result: {result}")
             return result
+        
         except urllib.error.HTTPError as error:
             logging.exception(f"{error.code} {error.info()} {error.read().decode('utf8', 'ignore')}")
             raise error
