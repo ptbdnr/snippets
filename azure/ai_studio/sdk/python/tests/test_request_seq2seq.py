@@ -14,7 +14,7 @@ def request_config() -> dict:
     @return: dict with Open AI configuration
     """
     return {
-        "endpoint": os.getenv("SEQ2SEQ_ENDPOINT"),
+        "endpoint_url": os.getenv("SEQ2SEQ_ENDPOINT_URL"),
         "api_key": os.getenv("SEQ2SEQ_KEY"),
     }
 

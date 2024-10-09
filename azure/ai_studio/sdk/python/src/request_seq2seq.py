@@ -10,7 +10,7 @@ from src.encrypt import mask_key
 
 
 # constants
-ENV_KEY_SEQ2SEQ_MLSTUDIO_ENDPOINT = "SEQ2SEQ_ENDPOINT"
+ENV_KEY_SEQ2SEQ_MLSTUDIO_ENDPOINT_URL = "SEQ2SEQ_ENDPOINT_URL"
 ENV_KEY_SEQ2SEQ_MLSTUDIO_KEY = "SEQ2SEQ_KEY"
 
 
@@ -24,24 +24,25 @@ class RequestSeq2Seq(Seq2Seq):
     """
     Class to generate a mockup text
     """
-    _endpoint: str
+    _endpoint_url: str
+    _api_key: str
     
     def __init__(
         self,
-        endpoint: str = None,
+        endpoint_url: str = None,
         api_key: str = None
     ):
         allowSelfSignedHttps(True) # this line is needed if you use self-signed certificate in your scoring service.
         logging.info("Start RequestSeq2Seq configuration ...")
 
-        self._endpoint = endpoint if endpoint \
-            else os.getenv(ENV_KEY_SEQ2SEQ_MLSTUDIO_ENDPOINT)
+        self._endpoint_url = endpoint_url if endpoint_url \
+            else os.getenv(ENV_KEY_SEQ2SEQ_MLSTUDIO_ENDPOINT_URL)
         self._api_key = api_key if api_key \
             else os.getenv(ENV_KEY_SEQ2SEQ_MLSTUDIO_KEY)
 
         # log configuration
-        logging.info(f"Azure ML Studio endpoint: {self._endpoint}")
-        logging.info(f"Azure ML Studio api_key: {mask_key(api_key, 2, -2)}")
+        logging.info(f"Azure ML Studio endpoint: {self._endpoint_url}")
+        logging.info(f"Azure ML Studio api_key: {mask_key(self._api_key, 2, -2)}")
 
         logging.info("Completed RequestSeq2Seq configuration.")
 
@@ -66,7 +67,7 @@ class RequestSeq2Seq(Seq2Seq):
         }
 
         req = urllib.request.Request(
-            url=self._endpoint, 
+            url=self._endpoint_url, 
             data=body,
             headers=headers
         )
