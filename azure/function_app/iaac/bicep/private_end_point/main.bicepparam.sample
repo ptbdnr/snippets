@@ -1,0 +1,18 @@
+using './main.bicep'
+
+var resourceGroupName = '****'
+param location = '****'
+
+param vnetName = '${resourceGroupName}-vnet'
+param functionSubnetName = '${resourceGroupName}-snet-func'
+param privateEndpointSubnetName = '${resourceGroupName}-snet-pe'
+
+param storageAccountName = '${resourceGroupName}st'
+param privateEndpointToStorageName = '${resourceGroupName}-pe-st'
+
+param privateDnsZoneName = '${resourceGroupName}.privatelink.blob'
+
+param functionAppServicePlanName = '${resourceGroupName}-func-plan'
+param functionPlanOS = 'Linux'
+param functionStorageAccountName = '${resourceGroupName}funcst'
+param functionAppName = '${resourceGroupName}func'
