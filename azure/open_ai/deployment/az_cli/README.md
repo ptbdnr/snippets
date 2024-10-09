@@ -19,6 +19,7 @@ ref. https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/create-re
 az group create \ 
     --name $RESOURGE_GROUP_NAME \ 
     --location $LOCATION
+    --tags Owner=$USERNAME
 ```
 
 2. Create a Cognitiveservices resource
@@ -48,7 +49,10 @@ az cognitiveservices account keys list \
 
 3. Deploy a model
 
+MODEL_NAME and MODEL_VERSION options as of Oct 2024
+
 | MODEL_NAME | MODEL_VERSION |
+| :--------- | :------------ |
 | gpt-35-turbo | 0613 |
 | gpt-35-turbo | 1106 |
 | gpt-35-turbo | 0125 |
@@ -60,17 +64,35 @@ az cognitiveservices account keys list \
 | gpt-4o-mini | 2024-07-18 |
 | test-embedding-ada-002 | 2 |
 
+
 SKU_NAME is subject to model and version and must be one of: `Standard`, `GlobalBatch`, `GlobalStandard`, and `ProvisionedManaged`
 SKU_CAPACITY is an integer representing 1000 units, eg 50 = 50K
 
 ```shell
 az cognitiveservices account deployment create \ 
-    --resource-group  $RESOURGE_GROUP_NAME \ 
+    --resource-group $RESOURGE_GROUP_NAME \ 
     --name $OPENAI_RESOURCE_NAME \ 
-    --deployment-name $DEPLOYMENT_NAME \ 
+    --deployment-name $MODEL_DEPLOYMENT_NAME \ 
     --model-format OpenAI \ 
     --model-name $MODEL_NAME \ 
     --model-version $MODEL_VERSION \ 
     --sku-name $SKU_NAME \ 
     --sku-capacity $SKU_CAPACITY
+```
+
+4. Delete a model
+
+```shell
+az cognitiveservices account deployment delete \ 
+    --resource-group $RESOURGE_GROUP_NAME \ 
+    --name $OPENAI_RESOURCE_NAME \ 
+    --deployment-name $MODEL_DEPLOYMENT_NAME
+```
+
+5. Delete a resource
+
+```shell
+az cognitiveservices account delete \ 
+    --resource-group $RESOURGE_GROUP_NAME \ 
+    --name $OPENAI_RESOURCE_NAME
 ```

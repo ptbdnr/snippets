@@ -1,0 +1,112 @@
+# Deploy model
+
+## Requirements
+
+* Azure subscription
+* Azure CLI: to sing-in to the Azure account
+* ml extension for Azure Machine Learning `az extension add -n ml`
+
+```shell
+# Azure CLI expected version: 2.61 or higher
+az --version
+# Azure CLI ML extension expected version: v2 or higher
+az ml -h
+```
+
+## Deploy a serverless API subscription to an AI model 
+ref. https://learn.microsoft.com/en-us/azure/ai-studio/how-to/deploy-models-serverless?tabs=cli
+status: in preview (9 Oct 2024)
+
+1. Create a Resource Group
+
+```shell
+az group create \ 
+    --name $RESOURGE_GROUP_NAME \ 
+    --location $LOCATION \ 
+    --tags Owner=$USERNAME
+```
+
+2. Create a Machine Learning workspace (project)
+
+```shell
+az ml workspace create \ 
+    --resource-group $RESOURGE_GROUP_NAME \ 
+    --location $LOCATION \ 
+    --name $ML_WORKSPACE_NAME 
+```
+
+This will create 
+* 1x Storage Account
+* 1x Key Vault
+* 1x Log Analytics Workspace
+* 1x Azure ML Workspace
+
+
+3. Configure the `ml` az cli extension for Azure Machine Learning
+
+```shell
+az configure --defaults \ 
+    group=$RESOURGE_GROUP_NAME \ 
+    location=$LOCATION \ 
+    workspace=$ML_WORKSPACE_NAME
+# Verify
+az configure -l -o table
+```
+
+4. Subsribe to the serverless API of the model
+
+Identify the model name and model ID on Azure AI Studio, and define a deployment name. Example:
+
+```plaintext
+$SUBSCRIPTION_NAME=Meta-Llama-3-8B-Instruct-subs
+$MODEL_ID=azureml://registries/azureml-meta/models/Meta-Llama-3-8B-Instruct
+$DEPLOYMENT_NAME=meta-llama3-8b-mydeployment
+```
+
+Save the config and create the subscription
+
+```shell
+# Create a new subscription
+touch serverless_api_subscription.yml
+echo "name: $SUBSCRIPTION_NAME" >> serverless_api_subscription.yml
+echo "model_id: $MODEL_ID" >> serverless_api_subscription.yml
+az ml marketplace-subscription create -f serverless_api_subscription.yml
+# Verify subscription
+az ml marketplace-subscription list
+```
+
+5. Deploy the model to a serverless API endpoint
+
+```shell
+# Create a new endpoint deployment
+touch serverless_api_endpoint.yml
+echo "name: $DEPLOYMENT_NAME" >> serverless_api_endpoint.yml
+echo "model_id: $MODEL_ID" >> serverless_api_endpoint.yml
+az ml serverless-endpoint create -f serverless_api_endpoint.yml
+# Verify endpoint deployment
+az ml serverless-endpoint list
+# URL: https://$DEPLOYMENT_NAME.$LOCATION.models.ai.azure.com
+# Get keys (primary and secondary)
+az ml serverless-endpoint get-credentials -n $DEPLOYMENT_NAME
+```
+
+5. Delete an endpoint and subscription
+
+```shell
+# Delete endpoint deployment
+az ml serverless-endpoint delete --name $DEPLOYMENT_NAME
+# Verify endpoint deployment
+az ml serverless-endpoint list
+# Delete subscription
+az ml marketplace-subscription delete --name $SUBSCRIPTION_NAME
+# Verify subscription
+az ml marketplace-subscription list
+```
+
+5. Delete a resource
+
+```shell
+az ml workspace delete \ 
+    --resource-group $RESOURGE_GROUP_NAME \ 
+    --name $ML_WORKSPACE_NAME
+```
