@@ -1,0 +1,9 @@
+python-dotenv==1.0.1
+scikit-learn==1.5.1
+datasets==2.20.0
+transformers==4.43.2
+accelerate==0.34.2
+evaluate==0.4.2
+torch==2.4.0
+numba==0.60.0
+ipywidgets==8.1.5

@@ -3,31 +3,52 @@
 // param resourceGroupName string
 
 @description('Location for all resources.')
-param location string
+param location string = resourceGroup().location
 
 @description('Name of the virtual network.')
-param vnetName string
+param vnetName string = 'vnet-${uniqueString(resourceGroup().id)}'
 
-@description('Name of the subnet.')
-param subnetName string
+@description('The name of the virtual network subnet to be associated with the Azure Function app.')
+param functionSubnetName string = 'snet-func'
+
+@description('Name of the virtual network subnet used for allocating IP addresses for private endpoints.')
+param privateEndpointSubnetName string = 'snet-pe'
 
 @description('Name of the storage account.')
-param storageAccountName string
+param storageAccountName string = 'st'
 
 @description('Name of the private endpoint.')
-param privateEndpointName string
+param privateEndpointToStorageName string
 
 @description('Name of the private DNS zone.')
 param privateDnsZoneName string
 
 @description('Name of the app service plan.')
-param appServicePlanName string
+param functionAppServicePlanName string = 'func-plan-${uniqueString(resourceGroup().id)}'
+
+@description('Specifies the OS used for the Azure Function hosting plan.')
+@allowed([
+  'Windows'
+  'Linux'
+])
+param functionPlanOS string = 'Linux'
+
+@description('Name of the backend storage account used by the function app.')
+param functionStorageAccountName string = 'funcst${uniqueString(resourceGroup().id)}'
 
 @description('Name of the function app.')
-param functionAppName string
+param functionAppName string = 'func-${uniqueString(resourceGroup().id)}'
 
+@description('Only required for Linux app to represent runtime stack in the format of \'runtime|runtimeVersion\'. For example: \'python|3.9\'')
+param linuxFxVersion string = 'python|3.11'
 
-// Create Resource Group
+var isReserved = ((functionPlanOS == 'Linux') ? true : false)
+var functionContentShareName = toLower('function-content-share')
+var functionWorkerRuntime = 'python'
+// var privateFunctionAppDnsZoneName = 'privatelink.azurewebsites.net'
+// var privateEndpointFunctionAppName = '${functionAppName}-private-endpoint'
+
+// // Create Resource Group
 // targetScope = 'subscription'
 // resource resourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
 //   name: resourceGroupName
@@ -36,20 +57,38 @@ param functionAppName string
 
 // Create Virtual Network with Subnet
 targetScope = 'resourceGroup'
-resource virtualNetwork 'Microsoft.Network/virtualNetworks@2021-02-01' = {
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-11-01' = {
   name: vnetName
   location: location
   properties: {
     addressSpace: {
       addressPrefixes: [
-        '10.0.0.0/16'
+        '10.0.0.0/16'  // The IP adddress space used for the virtual network.
       ]
     }
     subnets: [
       {
-        name: subnetName
+        name: privateEndpointSubnetName
         properties: {
-          addressPrefix: '10.0.0.0/24'
+          privateEndpointNetworkPolicies: 'Disabled'
+          privateLinkServiceNetworkPolicies: 'Enabled'
+          addressPrefix: '10.0.0.0/24' // The IP address space used for the subnet.
+        }
+      }
+      {
+        name: functionSubnetName
+        properties: {
+          privateEndpointNetworkPolicies: 'Enabled'
+          privateLinkServiceNetworkPolicies: 'Enabled'
+          delegations: [
+            {
+              name: 'webapp'
+              properties: {
+                serviceName: 'Microsoft.Web/serverFarms'
+              }
+            }
+          ]
+          addressPrefix: '10.0.1.0/24' // 'The IP address space used for the Azure Function integration subnet.'
         }
       }
     ]
@@ -57,7 +96,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2021-02-01' = {
 }
 
 // Create Storage Account
-resource storageAccount 'Microsoft.Storage/storageAccounts@2021-04-01' = {
+resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: storageAccountName
   location: location
   sku: {
@@ -65,23 +104,26 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2021-04-01' = {
   }
   kind: 'StorageV2'
   properties: {
-    allowBlobPublicAccess: false
+    // allowBlobPublicAccess: false
+    publicNetworkAccess: 'Disabled'
   }
 }
 
 // Create Private Endpoint for Storage Account
-resource privateEndpoint 'Microsoft.Network/privateEndpoints@2021-05-01' = {
-  name: privateEndpointName
+var storage_account_id = storageAccount.id
+resource privateEndpointToStorage 'Microsoft.Network/privateEndpoints@2022-05-01' = {
+  name: privateEndpointToStorageName
   location: location
   properties: {
     subnet: {
-      id: virtualNetwork.properties.subnets[0].id
+      id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnetName, privateEndpointSubnetName)
     }
+    customNetworkInterfaceName: '${privateEndpointToStorageName}-nic'
     privateLinkServiceConnections: [
       {
-        name: 'storageAccountConnection'
+        name: 'storageAccountPrivateLinkConnection'
         properties: {
-          privateLinkServiceId: storageAccount.id
+          privateLinkServiceId: storage_account_id
           groupIds: [
             'blob'
           ]
@@ -89,6 +131,9 @@ resource privateEndpoint 'Microsoft.Network/privateEndpoints@2021-05-01' = {
       }
     ]
   }
+  dependsOn: [
+    virtualNetwork
+  ]
 }
 
 // Create Private DNS Zone
@@ -99,82 +144,207 @@ resource privateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
 
 // Link Private DNS Zone to Virtual Network
 resource privateDnsZoneVnetLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
-  name: 'dnsLink'
   parent: privateDnsZone
+  name: '${privateDnsZoneName}-link'
+  location: 'global'
   properties: {
+    registrationEnabled: false
     virtualNetwork: {
       id: virtualNetwork.id
     }
-    registrationEnabled: false
   }
 }
 
 // Create DNS A Record in Private DNS Zone
-resource dnsARecord 'Microsoft.Network/privateDnsZones/A@2020-06-01' = {
-  name: '${storageAccountName}.${privateDnsZoneName}'
-  parent: privateDnsZone
+// var pep_ipv4 = privateEndpointToStorage.properties.networkInterfaces[0].properties.ipConfigurations[0].properties.privateIPAddress
+// resource dnsARecord 'Microsoft.Network/privateDnsZones/A@2020-06-01' = {
+//   name: '${storageAccountName}.${privateDnsZoneName}'
+//   parent: privateDnsZone
+//   properties: {
+//     ttl: 3600
+//     aRecords: [
+//       {
+//         ipv4Address: pep_ipv4
+//       }
+//     ]
+//   }
+// }
+
+resource privateEndpointStoragePrivateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-11-01' = {
+  parent: privateEndpointToStorage
+  name: '${privateEndpointToStorageName}-PrivateDnsZoneGroup'
   properties: {
-    ttl: 3600
-    aRecords: [
+    privateDnsZoneConfigs: [
       {
-        ipv4Address: privateEndpoint.properties.networkInterfaces[0].properties.ipConfigurations[0].properties.privateIPAddress
+        name: 'config'
+        properties: {
+          privateDnsZoneId: privateDnsZone.id
+        }
       }
     ]
   }
 }
 
-// Create App Service Plan
-resource appServicePlan 'Microsoft.Web/serverfarms@2021-02-01' = {
-  name: appServicePlanName
+// Create App Service Plan, recommended for production workloads
+resource functionAppServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
+  name: functionAppServicePlanName
   location: location
   sku: {
-    name: 'B1'
+    name: 'B1' 
     tier: 'Basic'
   }
   properties: {
-    reserved: true
+    reserved: isReserved
   }
 }
 
-// Create Function App
-resource functionApp 'Microsoft.Web/sites@2021-02-01' = {
+// storage account for function app
+resource functionStorageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
+  name: functionStorageAccountName
+  location: location
+  kind: 'StorageV2'
+  sku: {
+    name: 'Standard_LRS'
+  }
+  // properties: {
+  //   publicNetworkAccess: 'Disabled'
+  //   allowBlobPublicAccess: false
+  //   networkAcls: {
+  //     bypass: 'None'
+  //     defaultAction: 'Deny'
+  //   }
+  // }
+}
+
+// file share for Function App, required for deployment
+resource fileService 'Microsoft.Storage/storageAccounts/fileServices/shares@2023-05-01' = {
+  name: '${functionStorageAccountName}/default/${functionContentShareName}'
+  dependsOn: [
+    storageAccount
+  ]
+}
+
+// // Create Function App
+resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
   name: functionAppName
   location: location
+  kind: (isReserved ? 'functionapp,linux' : 'functionapp')
   properties: {
-    serverFarmId: appServicePlan.id
+    reserved: isReserved
+    serverFarmId: functionAppServicePlan.id
     siteConfig: {
-      linuxFxVersion: 'python|3.11'
+      linuxFxVersion: (isReserved ? linuxFxVersion : null)
       appSettings: [
         {
-          name: 'FUNCTIONS_WORKER_RUNTIME'
-          value: 'python'
+          name: 'AzureWebJobsStorage'
+          value: 'DefaultEndpointsProtocol=https;AccountName=${functionStorageAccountName};AccountKey=${functionStorageAccount.listKeys().keys[0].value};EndpointSuffix=core.windows.net'
+        }
+        // {
+        //   name: 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING'
+        //   value: 'DefaultEndpointsProtocol=https;AccountName=${functionStorageAccountName};AccountKey=${functionStorageAccount.listKeys().keys[0].value};EndpointSuffix=core.windows.net'
+        // }
+        // {
+        //   name: 'WEBSITE_CONTENTSHARE'
+        //   value: functionContentShareName
+        // }
+        {
+          name: 'FUNCTIONS_EXTENSION_VERSION'
+          value: '~4'
         }
         {
-          name: 'AzureWebJobsStorage'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=core.windows.net'
+          name: 'FUNCTIONS_WORKER_RUNTIME'
+          value: functionWorkerRuntime
         }
+        // {
+        //   name: 'WEBSITE_NODE_DEFAULT_VERSION'
+        //   value: '~14'
+        // }
+        // {
+        //   name: 'WEBSITE_VNET_ROUTE_ALL'
+        //   value: '1'
+        // }
+        // {
+        //   name: 'WEBSITE_CONTENTOVERVNET'
+        //   value: '1'
+        // }
       ]
     }
-  }
-  kind: 'functionapp,linux'
+  }  
   dependsOn: [
-    // appServicePlan
-    // storageAccount
-    privateEndpoint
+    functionAppServicePlan  
+    functionStorageAccount  // necessary for AzureWebJobsStorage
+    privateEndpointToStorage
     privateDnsZone
     privateDnsZoneVnetLink
-    dnsARecord
+    // dnsARecord
   ]
 }
 
-// Enable VNet Integration for Function App
-resource vnetIntegration 'Microsoft.Web/sites/virtualNetworkConnections@2021-02-01' = {
-  parent: functionApp
-  name: 'vnet'
-  properties: {
-    vnetResourceId: virtualNetwork.properties.subnets[0].id
-  }
-  dependsOn: [
-    // functionApp
-  ]
-}
+// // Enable VNet Integration for Function App
+// resource networkConfig 'Microsoft.Web/sites/networkConfig@2022-09-01' = {
+//   parent: functionApp
+//   name: 'virtualNetwork'
+//   properties: {
+//     subnetResourceId: resourceId('Microsoft.Network/virtualNetworks/subnets', vnetName, functionSubnetName)
+//     swiftSupported: true
+//   }
+//   dependsOn: [
+//     virtualNetwork
+//   ]
+// }
+
+// resource privateFunctionAppDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+//   name: privateFunctionAppDnsZoneName
+//   location: 'global'
+// }
+
+// resource privateDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+//   parent: privateFunctionAppDnsZone
+//   name: '${privateFunctionAppDnsZoneName}-link'
+//   location: 'global'
+//   properties: {
+//     registrationEnabled: false
+//     virtualNetwork: {
+//       id: virtualNetwork.id
+//     }
+//   }
+// }
+
+// resource privateEndpoint 'Microsoft.Network/privateEndpoints@2022-05-01' = {
+//   name: privateEndpointFunctionAppName
+//   location: location
+//   properties: {
+//     subnet: {
+//       id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnetName, privateEndpointSubnetName)
+//     }
+//     privateLinkServiceConnections: [
+//       {
+//         name: 'MyFunctionAppPrivateLinkConnection'
+//         properties: {
+//           privateLinkServiceId: functionApp.id
+//           groupIds: [
+//             'sites'
+//           ]
+//         }
+//       }
+//     ]
+//   }
+//   dependsOn: [
+//     virtualNetwork
+//   ]
+// }
+
+// resource privateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-05-01' = {
+//   parent: privateEndpoint
+//   name: 'funcPrivateDnsZoneGroup'
+//   properties: {
+//     privateDnsZoneConfigs: [
+//       {
+//         name: 'config'
+//         properties: {
+//           privateDnsZoneId: privateFunctionAppDnsZone.id
+//         }
+//       }
+//     ]
+//   }
+// }

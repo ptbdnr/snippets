@@ -16,7 +16,7 @@ There is a DNS zone, it has a VNet link to the same Virtual Network. The DNS has
 
 NB: The resources must be in the same location.
 
-If the DNS is not configured, then the connection string must point directly to the IP address of the Private Endpoint.
+To make calls to private endpoints, DNS lookups must resolve to the private endpoint. If the DNS is _not_ configured, then the connection string must point directly to the IP address of the Private Endpoint. This will likely create issues for example 1) the server not knowing which domain is requested without host header or 2) issues with the SSL certificate.
 
 ```python
 connection_string = f"DefaultEndpointsProtocol=https;AccountName={storage_account_name};AccountKey={storage_account_key};BlobEndpoint=https://{private_endpoint_private_ip_address}:443/"
@@ -178,12 +178,24 @@ az functionapp create \
   --runtime python
   --runtime-version 3.11
   --storage-account $STORAGE_NAME
+```
 
+8. Create an integration subnet for the Function App
+
+```shell
+az network vnet subnet create \ 
+  --resource-group $RESOURCE_GROUP_NAME \ 
+  --vnet-name $VNET_NAME \ 
+  --name $NEW_SUBNET_NAME \ 
+  --address-prefixes 10.0.1.0/24
+```
+
+```shell
 # Get the Subnet ID
 SUBNET_ID=$(az network vnet subnet show \ 
     --resource-group $RESOURCE_GROUP \ 
     --vnet-name $VNET_NAME \ 
-    --name $SUBNET_NAME \ 
+    --name $NEW_SUBNET_NAME \ 
     --query "id" \ 
     --output tsv \ 
 )
@@ -193,5 +205,5 @@ az webapp vnet-integration add \
     --resource-group $RESOURCE_GROUP \ 
     --name $FUNCTION_APP_NAME \ 
     --vnet $VNET_NAME \ 
-    --subnet $SUBNET_NAME
+    --subnet $SUBNET_ID
 ```

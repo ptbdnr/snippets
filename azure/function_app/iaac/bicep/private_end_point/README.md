@@ -16,7 +16,7 @@ There is a DNS zone, it has a VNet link to the same Virtual Network. The DNS has
 
 NB: The resources must be in the same location.
 
-If the DNS is not configured, then the connection string must point directly to the IP address of the Private Endpoint.
+To make calls to private endpoints, DNS lookups must resolve to the private endpoint. If the DNS is _not_ configured, then the connection string must point directly to the IP address of the Private Endpoint. This will likely create issues for example 1) the server not knowing which domain is requested without host header or 2) issues with the SSL certificate.
 
 ```python
 connection_string = f"DefaultEndpointsProtocol=https;AccountName={storage_account_name};AccountKey={storage_account_key};BlobEndpoint=https://{private_endpoint_private_ip_address}:443/"
@@ -60,9 +60,19 @@ ref: https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/deploy
 ref: https://learn.microsoft.com/en-us/cli/azure/deployment/group?view=azure-cli-latest#az-deployment-group-create
 
 ```shell
+az group create \ 
+    --resource-group $RESOURCE_GROUP_NAME \ 
+    --location $LOCATION \ 
+    --tags Owner=$USERNAME
+
 az deployment group create \ 
     --resource-group $RESOURCE_GROUP_NAME \ 
     --name 'myDeployment-'$(date +"%Y-%b-%d")
     --template-file $PATH_TO_BICEP_FILE \ 
     --parameters $PATH_TO_BICEPPARAM_FILE 
+```
+
+validate
+```shell
+az resource list --resource-group $RESOURCE_GROUP_NAME
 ```
