@@ -15,12 +15,15 @@ model = AzureOpenAI(
 )
 
 messages = [
-    ChatMessage(role="system", content="Answer the question in technical details."),
+    ChatMessage(
+        role="system",
+        content="Answer the question in technical details."
+    ),
     ChatMessage(role="user", content="who are you?"),
 ]
 
 # Invoke the model
 response = model.chat(messages)
 
-print('=' * 16 + '\n' + 'MODEL OUTPUT')
+print("=" * 16 + "\n" + "MODEL OUTPUT")
 print(response)

@@ -38,7 +38,8 @@ index = VectorStoreIndex.from_vector_store(
 )
 
 # Query Data from the persisted index
-# TODO: ValueError: "Could not load OpenAI model. If you intended to use OpenAI, please check your OPENAI_API_KEY."
+# TODO: ValueError: "Could not load OpenAI model.
+# If you intended to use OpenAI, please check your OPENAI_API_KEY."
 query_engine = index.as_query_engine(llm=None)
 response = query_engine.query("What did the author do growing up?")
 print('=' * 16 + '\n' + 'RETRIEVER OUTPUT')
