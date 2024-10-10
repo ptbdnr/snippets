@@ -28,7 +28,7 @@ vectorstore = Chroma(
     embedding_function=MockupEmbedding()
 )
 
-# Retrieve and generate using the relevant snippets of the blog.
+# Query and retrieve data
 retriever = vectorstore.as_retriever(k=999)
 prompt_template = hub.pull("rlm/rag-prompt")
 
@@ -43,6 +43,8 @@ def format_docs(docs):
 print('=' * 16 + '\n' + 'RETRIEVER OUTPUT')
 print(retriever.invoke("What is furthest space object from here?"))
 
+
+# Generate response
 rag_chain = (
     {"context": retriever | format_docs, "question": RunnablePassthrough()}
     | prompt_template

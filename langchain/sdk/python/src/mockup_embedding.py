@@ -4,8 +4,9 @@ from langchain.embeddings.base import Embeddings
 
 class MockupEmbedding(Embeddings):
     """ Mockup embedding function for testing """
-    def __init__(self, model_name: str = None):
-        self.model = None
+
+    def __init__(self):
+        super().__init__()
 
     def embed_documents(self, documents: List[str]) -> List[List[float]]:
         embeddings = []
