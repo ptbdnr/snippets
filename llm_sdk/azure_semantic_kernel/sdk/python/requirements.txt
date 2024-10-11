@@ -1,0 +1,2 @@
+python-dotenv==1.0.1
+semantic-kernel==1.11.0

@@ -7,7 +7,7 @@ from langchain_core.prompts import ChatPromptTemplate
 dotenv.load_dotenv()
 
 
-model = AzureChatOpenAI(
+llm = AzureChatOpenAI(
     azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
     azure_deployment=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"],
     openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"],
@@ -28,18 +28,18 @@ pt_result = prompt_template.invoke({
 })
 messages = pt_result.to_messages()
 
-# Invoke the model
-result = model.invoke(messages)
+# Invoke the LLM
+result = llm.invoke(messages)
 
-print('=' * 16 + '\n' + 'MODEL OUTPUT')
+print('=' * 16 + '\n' + 'LLM OUTPUT')
 print(result)
 
-# Chain the model and the prompt template
-chain = prompt_template | model
+# Chain the LLM and the prompt template
+chain = prompt_template | llm
 result = chain.invoke({
     "style": "technical details",
     "text": "who are you?"
 })
 
-print('=' * 16 + '\n' + 'CHAIN OUTPUT (PROMPT_TEMPLATE -> MODEL)')
+print('=' * 16 + '\n' + 'CHAIN OUTPUT (PROMPT -> PROMPT_TEMPLATE -> LLM)')
 print(result)

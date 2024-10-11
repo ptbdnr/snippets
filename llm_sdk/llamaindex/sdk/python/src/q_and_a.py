@@ -7,7 +7,7 @@ from llama_index.core.llms import ChatMessage
 dotenv.load_dotenv()
 
 
-model = AzureOpenAI(
+llm = AzureOpenAI(
     azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
     engine=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"],
     api_key=os.environ["AZURE_OPENAI_API_KEY"],
@@ -22,8 +22,8 @@ messages = [
     ChatMessage(role="user", content="who are you?"),
 ]
 
-# Invoke the model
-response = model.chat(messages)
+# Invoke the LLM
+response = llm.chat(messages)
 
-print("=" * 16 + "\n" + "MODEL OUTPUT")
+print("=" * 16 + "\n" + "LLM OUTPUT")
 print(response)

@@ -35,7 +35,8 @@ result = llm.chat(messages=messages)
 print('=' * 16 + '\n' + 'MODEL OUTPUT WITHOUT TOOL')
 print(result)
 
-# add tool to the model
+
+# Add tool to the model
 agent = ReActAgent.from_tools([tool], llm=llm, verbose=True)
 
 result = agent.chat("What is the date in 2 days?")

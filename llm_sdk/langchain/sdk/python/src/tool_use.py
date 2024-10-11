@@ -31,7 +31,8 @@ result = llm.invoke("What is the date in 2 days?")
 print('=' * 16 + '\n' + 'MODEL OUTPUT WITHOUT TOOL')
 print(result)
 
-# add tool to the model
+
+# Add tool to the model
 llm_with_tools = llm.bind_tools([x_days_ahead])
 
 result = llm_with_tools.invoke("What is the date in 2 days?")

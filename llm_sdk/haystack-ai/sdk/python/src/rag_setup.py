@@ -38,7 +38,7 @@ print(chroma_client.list_collections())
 old_collection = chroma_client.get_collection(name=CHROMA_COLLECTION_NAME)
 
 results = old_collection.query(
-    query_texts=['mock embedding text'],  # What is furthest space object?
+    query_texts=['mock embedding text'],  # What is farthest space object?
     n_results=1
 )
 

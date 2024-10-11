@@ -49,7 +49,8 @@ messages = [ChatMessage(role="user", content="What is the time in 2 hours?")]
 result = llm.chat(messages=messages)
 print(result)
 
-# add tool to the model
+
+# Add tools to the model
 tools = [tool_x_days_ahead, tool_x_hours_ahead]
 agent = ReActAgent.from_tools(tools, llm=llm, verbose=True)
 
