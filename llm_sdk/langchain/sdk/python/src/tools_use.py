@@ -46,8 +46,8 @@ print(result)
 result = llm.invoke("What is the time in 2 hours?")
 print(result)
 
-# add tools to the model (max 1 tool will be called)
 
+# Add tools to the model (max 1 tool will be called)
 
 def call_tools(msg: AIMessage) -> Runnable:
     """Simple sequential tool calling helper."""

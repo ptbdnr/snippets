@@ -8,7 +8,7 @@ from langchain_core.output_parsers import StrOutputParser
 dotenv.load_dotenv()
 
 
-model = AzureChatOpenAI(
+llm = AzureChatOpenAI(
     azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
     azure_deployment=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"],
     openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"],
@@ -19,13 +19,13 @@ messages = [
     HumanMessage(content="who are you?"),
 ]
 
-# Invoke the model
-result = model.invoke(messages)
+# Invoke the llm
+result = llm.invoke(messages)
 
-print('=' * 16 + '\n' + 'MODEL OUTPUT')
+print('=' * 16 + '\n' + 'LLM OUTPUT')
 print(result)
 
-# Parse the model output
+# Parse the LLM output
 parser = StrOutputParser()
 
 answer = parser.invoke(result)
@@ -33,8 +33,8 @@ answer = parser.invoke(result)
 print('=' * 16 + '\n' + 'PARSED OUTPUT')
 print(answer)
 
-# Chain the model and the parser
-chain = model | parser
+# Chain the LLM and the parser
+chain = llm | parser
 
-print('=' * 16 + '\n' + 'CHAIN OUTPUT (MODEL -> PARSER)')
+print('=' * 16 + '\n' + 'CHAIN OUTPUT (MESSAGES -> LLM -> PARSER)')
 print(chain.invoke(messages))

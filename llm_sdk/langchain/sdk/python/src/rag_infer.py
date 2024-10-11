@@ -41,7 +41,7 @@ def format_docs(docs):
 
 
 print('=' * 16 + '\n' + 'RETRIEVER OUTPUT')
-print(retriever.invoke("What is furthest space object from here?"))
+print(retriever.invoke("What is farthest space object from here?"))
 
 
 # Generate response
@@ -52,4 +52,4 @@ rag_chain = (
 )
 
 print('=' * 16 + '\n' + 'CHAIN OUTPUT (RETRIEVER -> PROMPT_TEMPLATE -> MODEL)')
-print(rag_chain.invoke("What is furthest space object from here?"))
+print(rag_chain.invoke("What is farthest space object from here?"))
