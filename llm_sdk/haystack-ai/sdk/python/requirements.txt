@@ -1,0 +1,4 @@
+python-dotenv==1.0.1
+haystack-ai==2.6.1
+chroma-haystack==0.22.1
+chromadb==0.5.12
