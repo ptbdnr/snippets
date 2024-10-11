@@ -51,5 +51,6 @@ rag_chain = (
     | llm
 )
 
-print('=' * 16 + '\n' + 'CHAIN OUTPUT (RETRIEVER -> PROMPT_TEMPLATE -> MODEL)')
+print('=' * 16 + '\n',
+      'CHAIN OUTPUT (PROMPT -> RETRIEVER -> PROMPT_TEMPLATE -> LLM)')
 print(rag_chain.invoke("What is farthest space object from here?"))
