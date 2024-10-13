@@ -8,12 +8,13 @@ from semantic_kernel import Kernel
 from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
 from semantic_kernel.functions import (
     kernel_function,
-    KernelArguments
+    KernelPlugin,
+    KernelArguments,
 )
-from semantic_kernel.contents.chat_history import ChatHistory
 from semantic_kernel.connectors.ai.function_choice_behavior import (
     FunctionChoiceBehavior
 )
+from semantic_kernel.contents.chat_history import ChatHistory
 
 
 dotenv.load_dotenv()
@@ -30,6 +31,9 @@ llm = AzureChatCompletion(
     api_version=os.environ["AZURE_OPENAI_API_VERSION"],
 )
 kernel.add_service(llm)
+
+prompt_execution_settings = kernel.\
+    get_prompt_execution_settings_from_service_id(llm_service_id)
 
 
 class DatetimeLookAheadPlugin:
@@ -57,24 +61,56 @@ custom_plugin = kernel.add_plugin(
 )
 
 
-print('=' * 16 + '\n' + 'TOOL OUTPUT (2 day ahead)')
-print(DatetimeLookAheadPlugin().x_days_ahead(offset=2))
-
-print('=' * 16 + '\n' + 'TOOL OUTPUT (2 hours ahead)')
-print(DatetimeLookAheadPlugin().x_hours_ahead(offset=2))
-
-
 async def main(
     kernel: Kernel,
-    chat_service: AzureChatCompletion
-):
-    # Enable automatic function calling
+    chat_service: AzureChatCompletion,
+    custom_plugin: KernelPlugin
+) -> None:
+    pass
+
+    result = await custom_plugin.get('XDaysAhead').invoke(
+        kernel=kernel,
+        offset=2
+    )
+    print('=' * 16 + '\n' + 'PLUGIN OUTPUT (2 day ahead)')
+    print(result)
+
+    result = await custom_plugin.get('XHoursAhead').invoke(
+        kernel=kernel,
+        offset=2
+    )
+    print('=' * 16 + '\n' + 'PLUGIN OUTPUT (2 hours ahead)')
+    print(result)
+
+    # Invoke the model
     prompt_execution_settings = kernel.\
         get_prompt_execution_settings_from_service_id(
             service_id=chat_service.service_id
         )
+
+    messages = ChatHistory()
+    messages.add_system_message("What is the date in 2 days?"),
+    result = await chat_service.get_chat_message_content(
+        chat_history=messages,
+        kernel=kernel,
+        settings=prompt_execution_settings
+    )
+    print('=' * 16 + '\n' + 'MODEL OUTPUT WITHOUT TOOL')
+    print(result)
+
+    messages = ChatHistory()
+    messages.add_system_message("What is the time in 2 hours?"),
+    result = await chat_service.get_chat_message_content(
+        chat_history=messages,
+        kernel=kernel,
+        settings=prompt_execution_settings
+    )
+    print('=' * 16 + '\n' + 'MODEL OUTPUT WITHOUT TOOL')
+    print(result)
+
+    # Allow tool to the model
     prompt_execution_settings.function_choice_behavior = \
-        FunctionChoiceBehavior.Auto(auto_invoke=True)
+        FunctionChoiceBehavior.Auto()
     messages = ChatHistory()
     messages.add_system_message("What is the datetime in 2 days and 2 hours?"),
     result = await chat_service.get_chat_message_contents(
@@ -83,7 +119,6 @@ async def main(
         kernel=kernel,
         arguments=KernelArguments(),
     )
-
     print('=' * 16 + '\n' + 'MODEL OUTPUT WITH TOOL BINDING')
     print(result[0])
 
@@ -92,5 +127,6 @@ async def main(
 if __name__ == "__main__":
     asyncio.run(main(
         kernel=kernel,
-        chat_service=llm
+        chat_service=llm,
+        custom_plugin=custom_plugin
     ))
