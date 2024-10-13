@@ -14,6 +14,7 @@ dotenv.load_dotenv()
 
 
 kernel = Kernel()  # Initialize the kernel
+
 service_id = 'chat-gpt'
 llm = AzureChatCompletion(
     service_id=service_id,
@@ -23,10 +24,21 @@ llm = AzureChatCompletion(
     api_version=os.environ["AZURE_OPENAI_API_VERSION"],
 )
 kernel.add_service(llm)
-req_settings = kernel.get_prompt_execution_settings_from_service_id(service_id)
+
+prompt_execution_settings: PromptExecutionSettings = None
+prompt_execution_settings = kernel.get_service(service_id).\
+    instantiate_prompt_execution_settings(
+        service_id=service_id,
+        temperature=0.1,
+        max_tokens=100,
+        top_p=0.5
+    )
 
 
-async def main(kernel: Kernel, req_settings: PromptExecutionSettings):
+async def main(
+    kernel: Kernel,
+    prompt_execution_settings: PromptExecutionSettings
+):
     messages = ChatHistory()
     messages.add_system_message("Answer the question in technical details.")
     messages.add_user_message("who are you?")
@@ -35,7 +47,7 @@ async def main(kernel: Kernel, req_settings: PromptExecutionSettings):
     result = await llm.get_chat_message_content(
         chat_history=messages,
         kernel=kernel,
-        settings=req_settings,
+        settings=prompt_execution_settings,
     )
 
     print('=' * 16 + '\n' + 'LLM OUTPUT')
@@ -44,4 +56,4 @@ async def main(kernel: Kernel, req_settings: PromptExecutionSettings):
 
 # Run the main function
 if __name__ == "__main__":
-    asyncio.run(main(kernel, req_settings))
+    asyncio.run(main(kernel, prompt_execution_settings))

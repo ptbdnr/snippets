@@ -6,11 +6,13 @@ import dotenv
 from semantic_kernel import Kernel
 from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
 from semantic_kernel.prompt_template import InputVariable, PromptTemplateConfig
+from semantic_kernel.functions import KernelArguments
 
 dotenv.load_dotenv()
 
 
 kernel = Kernel()  # Initialize the kernel
+
 service_id = 'chat-gpt'
 llm = AzureChatCompletion(
     service_id=service_id,
@@ -20,7 +22,6 @@ llm = AzureChatCompletion(
     api_version=os.environ["AZURE_OPENAI_API_VERSION"],
 )
 kernel.add_service(llm)
-req_settings = kernel.get_prompt_execution_settings_from_service_id(service_id)
 
 # Create a prompt template
 prompt_template = """Answer the question in {{$style}}. {{$text}}"""
@@ -42,7 +43,9 @@ prompt_template_config = PromptTemplateConfig(
             is_required=True
         ),
     ],
-    execution_settings=req_settings
+    execution_settings=kernel.get_prompt_execution_settings_from_service_id(
+        service_id=service_id
+    )
 )
 aswer_question = kernel.add_function(
     function_name="answer_question_function",
@@ -56,8 +59,10 @@ async def main(kernel: Kernel):
     # Invoke the LLM
     result = await kernel.invoke(
         function=aswer_question,
-        style="technical details",
-        text="who are you?"
+        arguments=KernelArguments(
+            style="technical details",
+            text="who are you?"
+        )
     )
 
     print('=' * 16 + '\n' + 'LLM OUTPUT')
