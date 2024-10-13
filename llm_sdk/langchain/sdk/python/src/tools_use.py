@@ -63,11 +63,11 @@ def call_tools(msg: AIMessage) -> Runnable:
 tools = [x_days_ahead, x_hours_ahead]
 llm_with_tools = llm.bind_tools(tools)
 
-result = llm_with_tools.invoke("What is the date in 2 days and 2 hours?")
+result = llm_with_tools.invoke("What is the datetime in 2 days and 2 hours?")
 print('=' * 16 + '\n' + 'MODEL OUTPUT WITH TOOL BINDING')
 print(result)
 
 chain = llm_with_tools | call_tools
-result = chain.invoke("What is the date in 2 days and 2 hours?")
+result = chain.invoke("What is the datetime in 2 days and 2 hours?")
 print('=' * 16 + '\n' + 'CHAIN OUTPUT (MODEL -> TOOLS)')
 print(result)

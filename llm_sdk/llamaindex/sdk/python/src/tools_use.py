@@ -54,6 +54,6 @@ print(result)
 tools = [tool_x_days_ahead, tool_x_hours_ahead]
 agent = ReActAgent.from_tools(tools, llm=llm, verbose=True)
 
-result = agent.chat("What is the date in 2 days and 2 hours?")
+result = agent.chat("What is the datetime in 2 days and 2 hours?")
 print('=' * 16 + '\n' + 'MODEL OUTPUT WITH TOOL BINDING')
 print(result)

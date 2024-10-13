@@ -76,7 +76,7 @@ tools = [
     }
 ]
 
-messages = [ChatMessage.from_user("What is the date in 2 days and 2 hours?")]
+messages = [ChatMessage.from_user("What is the datetime in 2 days and 2 hours?")]
 result = chat_llm.run(
     messages=messages,
     generation_kwargs={"tools": tools}

@@ -58,7 +58,7 @@ agent = create_tool_calling_agent(llm, tools, prompt_template)
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
 result = agent_executor.invoke({
-    "input": "What is the date in 2 days and 2 hours?"
+    "input": "What is the datetime in 2 days and 2 hours?"
 })
-print('=' * 16 + '\n' + 'MODEL OUTPUT WITH TOOL BINDING')
+print('=' * 16 + '\n' + 'AGENT OUTPUT WITH TOOL BINDING')
 print(result)
