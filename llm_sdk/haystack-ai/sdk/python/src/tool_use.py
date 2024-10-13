@@ -1,7 +1,8 @@
 import os
-import dotenv
-import json 
+import json
 from datetime import datetime, timedelta
+
+import dotenv
 
 from haystack.components.generators.chat import AzureOpenAIChatGenerator
 from haystack.dataclasses import ChatMessage
