@@ -3,9 +3,8 @@ import json
 import logging
 import urllib.request
 import ssl
-from typing import List
+from typing import List, Dict
 
-from src.seq2seq import Seq2Seq
 from src.encrypt import mask_key
 
 
@@ -20,9 +19,9 @@ def allowSelfSignedHttps(allowed):
         ssl._create_default_https_context = ssl._create_unverified_context
 
 
-class RequestSeq2Seq(Seq2Seq):
+class UrllibRequest:
     """
-    Class to generate a mockup text
+    Class to generate request using urllib
     """
     _endpoint_url: str
     _api_key: str
@@ -33,7 +32,7 @@ class RequestSeq2Seq(Seq2Seq):
         api_key: str = None
     ):
         allowSelfSignedHttps(True) # this line is needed if you use self-signed certificate in your scoring service.
-        logging.info("Start RequestSeq2Seq configuration ...")
+        logging.info("Start UrllibRequest configuration ...")
 
         self._endpoint_url = endpoint_url if endpoint_url \
             else os.getenv(ENV_KEY_SEQ2SEQ_MLSTUDIO_ENDPOINT_URL)
@@ -44,8 +43,36 @@ class RequestSeq2Seq(Seq2Seq):
         logging.info(f"Azure ML Studio endpoint: {self._endpoint_url}")
         logging.info(f"Azure ML Studio api_key: {mask_key(self._api_key, 2, -2)}")
 
-        logging.info("Completed RequestSeq2Seq configuration.")
+        logging.info("Completed UrllibRequest configuration.")
 
+
+    def text_classification(self, input_data: List[str]) -> Dict:
+        """
+        
+        """
+        logging.info("Start text_classification method ...")
+
+        try:        
+            request_data = str.encode(json.dumps({"input_data": input_data}))
+            
+            req = urllib.request.Request(
+                url=self._endpoint_url, 
+                data=request_data, 
+                headers={
+                    'Content-Type':'application/json', 
+                    'Authorization':('Bearer '+ self._api_key)
+                }
+            )
+            
+            response = urllib.request.urlopen(req)
+            result_str = response.read()
+            result_dict = json.loads(result_str.decode('utf-8'))
+            logging.info("Completed text_classification method.")
+            return result_dict
+        
+        except urllib.error.HTTPError as error:
+            logging.exception(f"{error.code} {error.info()} {error.read().decode('utf8', 'ignore')}")
+            raise error
 
     def chat(self, messages: List[dict], **kwargs) -> str:
         """
@@ -78,10 +105,11 @@ class RequestSeq2Seq(Seq2Seq):
         try:
             response = urllib.request.urlopen(req)
             
-            result = response.read().decode('utf8', 'ignore')
-            # result = json.loads(response.read())['output']
+            result_str = response.read()
+            result = result_str.decode('utf-8', 'ignore')
+            # result = json.loads(result_str)['output']
             
-            logging.info("Completed chatCompletion method.")
+            logging.info("Completed chat method.")
             return result
         
         except urllib.error.HTTPError as error:
