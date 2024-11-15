@@ -1,0 +1,13 @@
+# requirements.txt
+python-dotenv==1.0.1
+
+datasets==2.20.0
+
+transformers==4.43.2
+
+peft #==0.13.2
+evaluate #==0.4.3
+torch==2.5.1
+numpy==1.26.4
+# scikit-learn #==1.5.2
+# scipy #==1.11

@@ -1,0 +1,5 @@
+# requirements.txt
+python-dotenv==1.0.1
+
+datasets==2.20.0
+tiktoken==0.8.0
