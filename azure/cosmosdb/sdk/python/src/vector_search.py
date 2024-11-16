@@ -4,6 +4,8 @@ from typing import List
 
 import dotenv
 from azure.cosmos.cosmos_client import CosmosClient
+from azure.cosmos.partition_key import PartitionKey
+from azure.cosmos import exceptions
 
 dotenv.load_dotenv()
 
@@ -40,6 +42,58 @@ cosmos_client = CosmosClient(
 )
 
 embedding = MockupEmbedding()
+
+# Create container in the Vector store
+vector_embedding_policy = {
+    "vectorEmbeddings": [{
+        "path": "/contentVector",
+        "dataType": "float32",
+        "distanceFunction": "cosine",
+        "dimensions": 1536
+    }]
+}
+
+indexing_policy = {
+    "includedPaths": [{"path": "/*"}],
+    "excludedPaths": [{
+        "path": "/\"_etag\"/?",
+        "path": "/contentVector/*"
+    }],
+    "vectorIndexes": [{
+        "path": "/contentVector",
+        "type": "quantizedFlat"
+    }]
+}
+
+try:
+    db = cosmos_client.get_database_client(COSMOSDB_DATABASE_ID)
+    container = db.create_container(
+        id=COSMOSDB_CONTAINER_NAME,
+        partition_key=PartitionKey(path='/pkey'),
+        indexing_policy=indexing_policy,
+        vector_embedding_policy=vector_embedding_policy
+    )
+    logging.info(f"Container '{COSMOSDB_CONTAINER_NAME}' created")
+except exceptions.CosmosResourceExistsError:
+    container = db.get_container_client(
+        container=COSMOSDB_CONTAINER_NAME
+    )
+    logging.info(f"Container '{COSMOSDB_CONTAINER_NAME}' found")
+
+# Load the corpus
+docs = ["foo", "bar", "baz"]
+
+# Insert the corpus in the Vector store
+for idx, doc in enumerate(docs):
+    logging.info(f"Doc: {doc}")
+    contentVector = embedding.embed_query(text=doc.page_content)
+    container.create_item(body={
+        "id": str(idx),
+        "pkey": '',
+        "content": doc.page_content,
+        "contentVector": contentVector
+    })
+logging.info(f"inserted {len(docs)} documents in data store")
 
 # Query for documents
 query = 'foo'
