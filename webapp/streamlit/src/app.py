@@ -23,7 +23,7 @@ def get_items() -> List[Dict]:
 
 # Main Streamlit app starts here
 st.title('Title')
-st.text('v0.0.1')
+st.subheader('v0.0.1')
 
 
 with st.form(key='rows') as f_input:
@@ -43,6 +43,7 @@ with st.form(key='rows') as f_input:
         try:
             st.toast('start processing')
             st.text('output')
+            st.write(text_input)
         except Exception as ex:
             logging.exception(ex)
             st.exception(ex) 
@@ -60,7 +61,9 @@ with st.form(key='columns') as f_database:
     if button_a:
         try:
             st.toast('pressed button a')
-            item_list = get_items()
+            with st.spinner('querying only...'):
+                item_list = get_items()
+            st.subheader('Retriever result (retrieved documents)')
             st.write('A list')
             st.table(item_list)
         except Exception as ex:
@@ -70,7 +73,8 @@ with st.form(key='columns') as f_database:
     if button_b:
         try:
             st.toast('pressed button b')
-            item_list = get_items()
+            with st.spinner('querying only...'):
+                item_list = get_items()
             st.write('B list')
             st.table(item_list)
         except Exception as ex:
