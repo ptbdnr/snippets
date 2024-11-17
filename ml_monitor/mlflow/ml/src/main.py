@@ -22,7 +22,8 @@ mlflow.set_experiment_tags(
 
 with mlflow.start_run(run_name="a_run") as run:
     # tags
-    mlflow.set_tags({"run_tag": "a_run_tag"})
+    mlflow.set_tag("run_tag1", "a_run_tag1")
+    mlflow.set_tags({"run_tag2": "a_run_tag2"})
 
     # log input
     mlflow.log_text("input content", "input.txt")
