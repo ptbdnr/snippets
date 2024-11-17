@@ -1,0 +1,2 @@
+# requirements.txt
+wikipedia==1.4.0
