@@ -1,7 +1,7 @@
-from transformers import pipeline
-
 # HF:facebook/roberta-hate-speech-dynabench-r4-target
 # https://huggingface.co/facebook/roberta-hate-speech-dynabench-r4-target
+
+from transformers import pipeline
 
 pipe = pipeline("text-classification", model="facebook/roberta-hate-speech-dynabench-r4-target")
 
@@ -15,4 +15,5 @@ test_data = [(
     "[Identity Group] threaten our existence, so we should wipe them out."
     # https://learn.microsoft.com/en-gb/azure/ai-services/openai/concepts/content-filter?tabs=definitions%2Cuser-prompt%2Cpython-new#risk-categories
 )]
+
 pipe(test_data)
