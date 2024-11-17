@@ -25,3 +25,6 @@ result = llm.chat.completions.create(
 
 print('=' * 16 + '\n' + 'LLM OUTPUT')
 print(result.choices[0].message.content)
+
+# get input token count
+print(f"input tokens: {result.usage.prompt_tokens}")

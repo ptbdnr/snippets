@@ -1,3 +1,10 @@
+## Outline
+# 1: Create the LLM instance
+# 2: Connect to the vector store
+# 3: Create the prompt template / message list
+# 4: Retrieve information and generate response
+# 5: Return the result to the client
+
 import os
 import dotenv
 
