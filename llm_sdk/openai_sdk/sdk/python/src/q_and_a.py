@@ -41,6 +41,10 @@ for choice in result.choices:
         "message.content": choice.message.content,
         "message.tool_calls": choice.message.tool_calls
     }, indent=2))
+    try:
+        print(f" content_filter_results: {json.dumps(choice.content_filter_results, indent=2)}")
+    except Exception:
+        pass
 
 print(f"usage {result.usage}")
 print(f"prompt_tokens {result.usage.prompt_tokens}")
