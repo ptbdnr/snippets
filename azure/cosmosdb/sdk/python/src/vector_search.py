@@ -3,6 +3,8 @@ import logging
 from typing import List
 
 import dotenv
+
+# azure-cosmos>=4.7.0
 from azure.cosmos.cosmos_client import CosmosClient
 from azure.cosmos.partition_key import PartitionKey
 from azure.cosmos import exceptions
@@ -17,6 +19,9 @@ COSMOSDB_CONTAINER_NAME = os.getenv('COSMOSDB_CONTAINER_NAME')
 
 class MockupEmbedding():
     """ Mockup embedding function for testing """
+    dimensions = 384
+    distance_function = "cosine"
+    data_type = "float32"
 
     def __init__(self):
         super().__init__()
@@ -25,7 +30,7 @@ class MockupEmbedding():
         return self._get_text_embedding(query)
 
     def _get_text_embedding(self, text: str) -> List[float]:
-        return [1.0 * x * len(text) for x in range(384)]
+        return [1.0 * x * len(text) for x in range(self.dimensions)]
 
     def embed_documents(self, documents: List[str]) -> List[List[float]]:
         return [self._get_text_embedding(doc) for doc in documents]
@@ -44,12 +49,14 @@ cosmos_client = CosmosClient(
 embedding = MockupEmbedding()
 
 # Create container in the Vector store
+vector_property_name = 'contentVector'
+
 vector_embedding_policy = {
     "vectorEmbeddings": [{
-        "path": "/contentVector",
-        "dataType": "float32",
-        "distanceFunction": "cosine",
-        "dimensions": 1536
+        "path": '/' + vector_property_name,
+        "dataType": embedding.data_type,
+        "distanceFunction": embedding.distance_function,
+        "dimensions": int(embedding.dimensions)
     }]
 }
 
@@ -57,10 +64,10 @@ indexing_policy = {
     "includedPaths": [{"path": "/*"}],
     "excludedPaths": [{
         "path": "/\"_etag\"/?",
-        "path": "/contentVector/*"
+        "path": '/' + vector_property_name + '/*'
     }],
     "vectorIndexes": [{
-        "path": "/contentVector",
+        "path": '/' + vector_property_name,
         "type": "quantizedFlat"
     }]
 }
@@ -72,6 +79,7 @@ try:
         partition_key=PartitionKey(path='/pkey'),
         indexing_policy=indexing_policy,
         vector_embedding_policy=vector_embedding_policy
+        # offer_throughput=1000  # read unit count
     )
     logging.info(f"Container '{COSMOSDB_CONTAINER_NAME}' created")
 except exceptions.CosmosResourceExistsError:
