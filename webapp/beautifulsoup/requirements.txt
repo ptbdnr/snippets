@@ -1,0 +1,4 @@
+# requirements.txt
+beautifulsoup4==4.12.3
+markdownify==0.13.1
+trafilatura==1.12.2
