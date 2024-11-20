@@ -1,5 +1,6 @@
 import os
 import logging
+from types import List
 
 from azure.storage.blob import BlobServiceClient
 
@@ -36,6 +37,13 @@ class AzureStorageAccount(Storage):
         )
 
         logging.info("Completed AzureStorageAccount configuration.")
+
+    def list_containers(self) -> List[str]:
+        """
+        List all containers
+        @return: list of container names
+        """
+        return self.blob_service_client.list_containers()
 
     def download_to_text(self, path: str, filename: str) -> str:
         """
