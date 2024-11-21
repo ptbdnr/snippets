@@ -1,0 +1,11 @@
+{% macro add_badge(item, items) %}
+  {% set lowest_price = items|map(attribute="price")|min %}
+  
+  {% if item.price == lowest_price %}
+    🤩
+  {% elif item.price <= 200  %}
+    ⭐️
+  {% else %}
+    ☆
+  {% endif %}
+{% endmacro %}

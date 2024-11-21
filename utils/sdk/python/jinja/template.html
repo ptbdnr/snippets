@@ -1,0 +1,27 @@
+{% import "macros.html" as macros %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Results</title>
+</head>
+
+<body>
+  <h1>Hello {{ user }}!</h1>
+  <p>From {{ vendor }}</p>
+  <ul>
+    {% for item in items|sort(attribute="product")|sort(attribute="price", reverse=true) %}
+    <li>
+      {% if item.price <= 200 %}
+        🙂
+      {% else %}
+        🙁
+      {% endif %}
+      <em>{{ item.product }}</em>: ${{ item.price }}
+      {{ macros.add_badge(item, items) }}
+    </li>
+  {% endfor %}
+  </ul>
+</body>
+</html>
