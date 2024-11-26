@@ -18,6 +18,7 @@ pg = st.navigation(
     pages=[
         st.Page("pages/hello_world.py", title="HelloWord", icon=":material/thumb_up:", default=True),
         st.Page("pages/forms.py", title="Forms", icon="📝"),
+        st.Page("pages/chat.py", title="Chat", icon="💬"),
     ],
     # position="sidebar",
     # expanded=True,
