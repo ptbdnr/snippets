@@ -68,7 +68,7 @@ indexing_policy = {
     }],
     "vectorIndexes": [{
         "path": '/' + vector_property_name,
-        "type": "quantizedFlat"
+        "type": "quantizedFlat"  # one of ['flat', 'quantizedFlat', 'DiscANN']
     }]
 }
 
@@ -92,13 +92,14 @@ except exceptions.CosmosResourceExistsError:
 docs = ["foo", "bar", "baz"]
 
 # Insert the corpus in the Vector store
+CONTENT_MAX_CHAR = 999999
 for idx, doc in enumerate(docs):
     logging.info(f"Doc: {doc}")
     contentVector = embedding.embed_query(text=doc.page_content)
     container.create_item(body={
         "id": str(idx),
         "pkey": '',
-        "content": doc.page_content,
+        "content": doc.page_content[:CONTENT_MAX_CHAR],
         "contentVector": contentVector
     })
 logging.info(f"inserted {len(docs)} documents in data store")
