@@ -12,5 +12,9 @@ test_data = (
     "to release built up tension."
 )
 
+print(f"Letter count: {textstat.letter_count(test_data)}")
+print(f"Word count: {textstat.lexicon_count(test_data)}")
+print(f"Sentence count: {textstat.sentence_count(test_data)}")
 print(f"FK grade: {textstat.flesch_kincaid_grade(test_data)}")
 print(f"ARI: {textstat.automated_readability_index(test_data)}")
+
