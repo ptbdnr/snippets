@@ -1,8 +1,8 @@
 import streamlit as st
 
-st.set_page_config(page_title="Snipper", page_icon="🔥")
+st.set_page_config(page_title="Snippets", page_icon="🔥")
 
-from src.password import check_password
+from password import check_password
 
 
 if not check_password():
@@ -10,6 +10,7 @@ if not check_password():
 
 
 # Main Streamlit app starts here
+st.logo(image='media/Smiley.svg.png', size='medium', link='https://en.wikipedia.org/wiki/Smiley')
 st.title('Title')
 st.subheader('v0.0.1')
 
@@ -19,6 +20,7 @@ pg = st.navigation(
         st.Page("pages/hello_world.py", title="HelloWord", icon=":material/thumb_up:", default=True),
         st.Page("pages/forms.py", title="Forms", icon="📝"),
         st.Page("pages/chat.py", title="Chat", icon="💬"),
+        st.Page("pages/layout.py", title="Layout", icon="📊"),
     ],
     # position="sidebar",
     # expanded=True,

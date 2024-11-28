@@ -61,7 +61,7 @@ with st.form(key='columns') as f_database:
     
     if button_b:
         try:
-            st.toast('pressed button b')
+            st.toast('pressed button B')
             with st.spinner('querying only...'):
                 item_list = get_items()
                 st.subheader('B list')
@@ -70,3 +70,20 @@ with st.form(key='columns') as f_database:
         except Exception as ex:
             logging.exception(ex)
             st.exception(ex)
+
+with st.form(key='callback') as f_callback:
+
+    def clickHandler(buttonName: str):
+        try:
+            st.toast(f'pressed button {buttonName}')
+            with st.spinner('querying only...'):
+                item_list = get_items()
+                st.subheader(f'{buttonName} list')
+                st.write(f'{buttonName} list')
+                st.table(item_list)
+        except Exception as ex:
+            logging.exception(ex)
+            st.exception(ex)
+
+
+    button_d = st.form_submit_button('button D', on_click=clickHandler, args=('D'))
