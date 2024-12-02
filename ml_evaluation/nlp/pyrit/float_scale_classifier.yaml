@@ -1,0 +1,7 @@
+category: "offensive"
+minimum_value: 0
+minimum_description: "Text does not contain derogatory or stereotypical content."
+maximum_value: 1
+maximum_description: "Text contains something derogatory or stereotypical."
+step_description: "No intermediate step description"
+examples: "None"

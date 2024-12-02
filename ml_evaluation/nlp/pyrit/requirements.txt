@@ -1,0 +1,7 @@
+# requirements.txt
+python-dotenv==1.0.1
+pyrit==0.5.0
+
+# one of
+torch==2.5.1
+# tensorflow==2.18.0
