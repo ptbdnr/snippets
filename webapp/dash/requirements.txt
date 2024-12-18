@@ -1,0 +1,7 @@
+# requirements.txt
+python-dotenv==1.0.1
+
+pandas==2.2.3
+
+dash==2.18.2
+dash-auth==2.3.0
