@@ -1,2 +1,9 @@
 .coverage
 .DS_Store
+.venv/
+.vscode/
+.env
+certs
+mlruns/
+chroma_cache/
+__pycache__/
