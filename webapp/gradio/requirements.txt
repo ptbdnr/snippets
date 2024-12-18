@@ -1,0 +1,6 @@
+# requirements.txt
+python-dotenv==1.0.1
+
+gradio==5.8.0
+
+fastapi==0.115.6  # to bind multiple gradio pages
