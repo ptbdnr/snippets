@@ -45,6 +45,16 @@ class AzureStorageAccount(Storage):
         """
         return self.blob_service_client.list_containers()
 
+    def list_blobs(self, path: str, prefix: str = None) -> List[str]:
+        """
+        List all blobs
+        @param path: container name
+        @param prefix: blob name prefix
+        @return: list of blob names
+        """
+        container_client = self.blob_service_client.get_container_client(container=path)
+        return container_client.list_blobs(name_starts_with=prefix)
+
     def download_to_text(self, path: str, filename: str) -> str:
         """
         Return data in text
