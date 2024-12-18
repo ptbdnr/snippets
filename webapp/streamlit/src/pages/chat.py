@@ -2,6 +2,7 @@ import time
 
 import streamlit as st
 
+
 _LOREM_IPSUM = """
 This is formatted: **bold**, _italic_, and `code`. This is a [link](https://www.streamlit.io).
 
@@ -10,10 +11,12 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam eu est quis turp
 Vivamus eleifend scelerisque augue vitae egestas. Phasellus auctor nisi in lacus volutpat, id commodo leo auctor. Donec sit amet nisl nec leo pretium sollicitudin et sit amet risus. Sed in nisl eget nibh pretium vehicula in vel felis. Nunc ut scelerisque tortor, eu gravida diam. In hac habitasse platea dictumst. Nulla facilisi. Nam at augue nec velit laoreet rhoncus. Proin consectetur semper vulputate.
 """
 
+
 def stream_data():
     for word in _LOREM_IPSUM.split(" "):
         yield word + " "
         time.sleep(0.02)
+
 
 prompt = st.chat_input("Say something")
 if prompt:

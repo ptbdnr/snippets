@@ -1,33 +1,28 @@
-import os
 import logging
-import requests
 import time
 from typing import List, Dict
 
 import streamlit as st
-
-import dotenv
-
-dotenv.load_dotenv()
 
 
 def get_items() -> List[Dict]:
     time.sleep(2)
     return [{'id': 1, 'title': 'item 1'}, {'id': 2, 'title': 'item 2'}]
 
+
 with st.form(key='rows') as f_input:
-    
+
     framework_key = st.selectbox(
         label='select one',
         options=['A', 'B']
     )
-    
+
     text_input = st.text_area(
         label='text area',
         height=80)
 
     button = st.form_submit_button('Submit')
-    
+
     if button:
         try:
             st.toast('start processing')
@@ -39,14 +34,14 @@ with st.form(key='rows') as f_input:
 
 
 with st.form(key='columns') as f_database:
-    
-    col1, col2 = st.columns([1,1])
+
+    col1, col2 = st.columns([1, 1])
 
     with col1:
         button_a = st.form_submit_button('button A')
     with col2:
         button_b = st.form_submit_button('button B')
-    
+
     if button_a:
         try:
             st.toast('pressed button a')
@@ -57,8 +52,8 @@ with st.form(key='columns') as f_database:
             st.table(item_list)
         except Exception as ex:
             logging.exception(ex)
-            st.exception(ex) 
-    
+            st.exception(ex)
+
     if button_b:
         try:
             st.toast('pressed button B')
@@ -84,6 +79,5 @@ with st.form(key='callback') as f_callback:
         except Exception as ex:
             logging.exception(ex)
             st.exception(ex)
-
 
     button_d = st.form_submit_button('button D', on_click=clickHandler, args=('D'))

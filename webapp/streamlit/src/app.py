@@ -5,7 +5,7 @@ st.set_page_config(page_title="Snippets", page_icon="🔥")
 from password import check_password
 
 
-if not check_password():
+if not check_password(f):
     st.stop()  # Do not continue if check_password is not True.
 
 
