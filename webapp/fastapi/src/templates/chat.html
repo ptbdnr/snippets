@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat</title>
+</head>
+<body>
+    <h1>Chat</h1>
+    <p id="resp"></p>
+    <form method="post">
+        <textarea id="text_area" name="message" rows="1" placeholder="write here"></textarea>
+        <input type="button" value="send" onclick="send()">
+    </form>
+
+    <script>
+        function send() {
+            var resp = document.getElementById("resp");
+            const value = document.getElementById("text_area").value;
+            var form_data = new FormData();
+            form_data.append("value", value);
+            
+            fetch('/chat/stream', {
+                method: 'POST', 
+                body: form_data
+            })
+                .then(response => {
+                    console.log("Streaming in progress ..");
+                    const reader = response
+                        .body
+                        .getReader();
+                    const decoder = new TextDecoder();
+                    let receivedLength = 0;
+
+                    return new ReadableStream({
+                        start(controller) {
+                            function push() {
+                                reader
+                                    .read()
+                                    .then(({ done, value }) => {
+                                        if (done) {
+                                            controller.close();
+                                            return;
+                                        }
+                                        receivedLength += value.length;
+                                        const chunk = decoder.decode(value, { stream: true });
+                                        resp.textContent += chunk;
+                                        controller.enqueue(value);
+                                        push();
+                                    });
+                            }
+                            push();
+                        }
+                    });
+                })
+                .then(stream => new Response(stream))
+                .then(response => response.text())
+                .then(data => {console.log("Streaming complete");})
+                .catch(error => {console.error('Streaming error:', error);});
+        }
+    </script>
+</body>
+</html>
