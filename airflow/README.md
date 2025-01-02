@@ -1,0 +1,1 @@
+Apache Airflow Core, which includes webserver, scheduler, CLI and other components that are needed for minimal Airflow installation
