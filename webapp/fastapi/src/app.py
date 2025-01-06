@@ -1,8 +1,5 @@
-from typing import Annotated, Callable
-
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.security import OAuth2PasswordRequestForm
 
 from src.pages.chat import router as router_chat
 from src.pages.forms import router as router_forms
@@ -54,12 +51,11 @@ async def read_item(item_id: int, attribute_name: str | None = None):
     selected_item = selected_items[0] if selected_items else None
     if not selected_item:
         return JSONResponse(status_code=404, content={"message": "Item not found"})
-    elif not attribute_name:
+    if not attribute_name:
         return selected_item
-    elif attribute_name in selected_item:
+    if attribute_name in selected_item:
         return {"id": selected_item["id"], attribute_name: selected_item[attribute_name]}
-    else:
-        return JSONResponse(status_code=404, content={"message": "Attribute not found"})
+    return JSONResponse(status_code=404, content={"message": "Attribute not found"})
 
 @app.get("/api/{item_id}/attributes/{attribute_name}", response_class=JSONResponse)
 async def read_item_attribute(item_id: int, attribute_name: str):
@@ -67,7 +63,6 @@ async def read_item_attribute(item_id: int, attribute_name: str):
     selected_item = selected_items[0] if selected_items else None
     if not selected_item:
         return JSONResponse(status_code=404, content={"message": "Item not found"})
-    elif attribute_name in selected_item:
+    if attribute_name in selected_item:
         return {"id": selected_item["id"], attribute_name: selected_item[attribute_name]}
-    else:
-        return JSONResponse(status_code=404, content={"message": "Attribute not found"})
+    return JSONResponse(status_code=404, content={"message": "Attribute not found"})
