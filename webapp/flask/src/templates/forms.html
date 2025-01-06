@@ -1,0 +1,66 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sample Form</title>
+</head>
+<body>
+
+<h1>Forms</h1>
+{% if resultD %}{{ resultD.label }}<br>{{ resultD.content }}{% endif %}
+<form id="form_1" method="post">
+    <input type="hidden" name="form_id" value="form_1">
+    <label for="letter_dropdown">select one</label>
+    <br>
+    <select id="letter_dropdown" name="letter">
+        <option value="a">A</option>
+        <option value="b">B</option>
+    </select>
+    <br>
+    <label for="text_area">text area</label>
+    <br>
+    <textarea id="text_area" name="message" rows="3" placeholder="write here"></textarea>
+    <br>
+    <input type="submit">
+    {% if result %}{{ result.label }}<br>input: {{ result.content }}{% endif %}
+</form>
+
+<div>
+    <form id="form_2">
+        <input type="hidden" name="form_id" value="form_2">
+        <input type="button" value="button A" onclick="sendAB('A')">
+    </form>
+    <form id="form_3">
+        <input type="hidden" name="form_id" value="form_3">
+        <input type="button" value="button B" onclick="sendAB('B')">
+    </form>
+    <p id="resp"></p>
+</div>
+
+<form id="form_4" method="post">
+    <input type="hidden" name="form_id" value="form_4">
+    <button type="submit">button D</button>
+</form>
+
+
+<script>
+    function sendAB(value) {
+    var resp = document.getElementById("resp");
+    var form_data = new FormData();
+    form_data.append("value", value);
+    
+    fetch('/forms/AB', {
+            method: 'POST',
+            body: form_data,
+        })
+        .then(response => response.json())
+        .then(data => {
+            resp.innerHTML = JSON.stringify(data); // data is a JSON object
+        })
+        .catch(error => {
+            console.error(error);
+        });
+    }
+</script>
+
+</body>
+</html>
