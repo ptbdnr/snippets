@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from src.pages.chat import router as router_chat
 from src.pages.forms import router as router_forms
@@ -7,6 +8,8 @@ from src.pages.hello_world import router as router_hello_world
 from src.pages.layout import router as router_layout
 
 app = FastAPI()
+app.mount("/static", StaticFiles(directory="src/static", html = True), name="static")
+
 app.include_router(router_hello_world)
 app.include_router(router_forms)
 app.include_router(router_chat)
@@ -22,7 +25,7 @@ route_map = {
 links = "\n".join([f"""<li><a href="{v['path']}">{k}</a></li>""" for (k,v) in route_map.items()])
 
 index_html = f"""
-![markup image around here](file/Smiley.svg.png)
+<img src="/static/Smiley.svg.png" width="40" height="40"/>
 <h1>Title</h1>
 <h2>v0.0.1</h2>
 <ul>
