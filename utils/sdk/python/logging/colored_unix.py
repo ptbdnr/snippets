@@ -1,6 +1,7 @@
 """Provides a custom logging formatter that adds colors to log messages based on their severity level."""
 
 import logging
+import sys
 import typing
 
 
@@ -48,6 +49,9 @@ ch.setLevel(logging.DEBUG)
 ch.setFormatter(CustomFormatter())
 
 logger.addHandler(ch)
+
+logger.addHandler(logging.FileHandler(filename="foo.log"))
+logger.addHandler(logging.StreamHandler(stream=sys.stdout))
 
 
 logger.debug("debug message")
