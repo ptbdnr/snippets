@@ -1,9 +1,24 @@
-.coverage
 .DS_Store
+
+# Python env
 .venv/
-.vscode/
-.env
-certs
+
+# pyc files
+__pycache__/
+
+# Python packages
+.coverage
 mlruns/
 chroma_cache/
-__pycache__/
+
+# javascript and typescript
+node_modules/
+
+# IDE
+.vscode/
+
+# environment variables
+.env
+
+#certificates
+certs
