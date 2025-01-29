@@ -41,6 +41,8 @@ az group create
 
 2. Create virtual machine
 
+OS (or Data) disk size: for AI models select 500GB or more to store model manifests
+
 ```bash
 az vm create 
     --resource-group $RESOURGE_GROUP_NAME
@@ -48,11 +50,11 @@ az vm create
     --image $IMAGE
     --size $SIZE
     --admin-username $ADMIN_USERNAME
-     --generate-ssh-keys
+    --generate-ssh-keys
     --public-ip-sku Standard
     --custom-data cloud-init.txt
+    --os-disk-sizes-gb 512
 ```
-  --custom-data cloud-init.txt
 
 3. Open ports
 
