@@ -1,0 +1,10 @@
+{
+    "name": "postman-newman-sample",
+    "version": "1.0.0",
+    "scripts": {
+      "test": "node tests/test_sample.js"
+    },
+    "dependencies": {
+      "newman": "^5.0.0"
+    }
+  }
