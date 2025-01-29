@@ -1,4 +1,6 @@
-# vLLM: Install
+# vLLM
+
+## Install
 ref. https://docs.vllm.ai/en/latest/getting_started/installation.html
 
 ```bash
@@ -20,39 +22,7 @@ source .venv/bin/activate
 pip install vllm
 ```
 
-```bash
-touch offline_inference.py
-```
-
-insert in offline_inference.py
-```python
-from vllm import LLM, SamplingParams
-
-prompts = [
-    "Hello, my name is",
-    "The president of the United States is",
-    "The capital of France is",
-    "The future of AI is",
-]
-sampling_params = SamplingParams(temperature=0.8, top_p=0.95)
-
-llm = LLM(model="facebook/opt-125m")
-
-outputs = llm.generate(prompts, sampling_params)
-
-# Print the outputs.
-for output in outputs:
-    prompt = output.prompt
-    generated_text = output.outputs[0].text
-    print(f"Prompt: {prompt!r}, Generated text: {generated_text!r}")
-```
-
-Run code
-```bash
-python offline_inference.py
-```
-
-# vLLM: Serve model
+## Launch a Server
 ref. https://docs.vllm.ai/en/latest/models/supported_models.html
 
 Example model_tags:
@@ -78,7 +48,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-Start serving the model on PORT = 23456
+Start serving the model, binding to port 23456 on all interfaces (0.0.0.0)
 [optional] configure GPU_COUNT (default = 1)
 [optional] configure data type, e.g. --dtype=half
 ```bash
@@ -96,10 +66,9 @@ python3 -m vllm.entrypoints.openai.api_server --model $MODEL_TAG --gpu-memory-ut
 example:
 1. python3 -m vllm.entrypoints.openai.api_server --model microsoft/Phi-3.5-MoE-instruct --port 23456 --trust_remote_code --tensor-parallel-size 2
 
-# vLLM: Connect remotely
+## Connect remotely
 
-## Via Azure network setting
-This might not work on corpotate network
+(This might not work behind firewall.)
 
 Open the Azure portal and navigate to the VM
 Select Networking
@@ -126,7 +95,7 @@ curl http://<$VM_IP_ADDRESS>:23456/v1/models | | prettyjson
 example: curl http://51.12.52.76:23456/v1/models | python3 -m json.tool
 
 
-Send a request to generate code from the local machine
+Send a request to generate text
 ```bash
 curl http://<$VM_IP_ADDRESS>:23456/v1/completions \
     -H "Content-Type: application/json" \
@@ -150,3 +119,41 @@ curl http://<$VM_IP_ADDRESS>:23456/v1/chat/completions \
 ```
 example:
 1. curl http://51.12.52.76:23456/v1/chat/completions -H "Content-Type: application/json" -d '{"model": "microsoft/Phi-3.5-MoE-instruct", "messages": [{"role": "user", "content": "Fibonacci sequence in Python"}]}'
+
+
+
+## Offline inferece
+
+```bash
+touch offline_inference.py
+```
+
+insert in offline_inference.py
+
+```python
+# launch the offline engine
+from vllm import LLM, SamplingParams
+
+llm = LLM(model="facebook/opt-125m")
+
+prompts = [
+    "Hello, my name is",
+    "The president of the United States is",
+    "The capital of France is",
+    "The future of AI is",
+]
+sampling_params = SamplingParams(temperature=0.8, top_p=0.95)
+
+outputs = llm.generate(prompts, sampling_params)
+
+# Print the outputs.
+for output in outputs:
+    prompt = output.prompt
+    generated_text = output.outputs[0].text
+    print(f"Prompt: {prompt!r}, Generated text: {generated_text!r}")
+```
+
+Run code
+```bash
+python offline_inference.py
+```
