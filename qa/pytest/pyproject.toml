@@ -1,0 +1,13 @@
+# pyproject.toml
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+    "integration",
+]
+markers = [
+    "slow: mark a test that takes a long time to run.",
+    "foo_marker: marks tests as foo.",
+]
