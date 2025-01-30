@@ -3,8 +3,8 @@
 #   jupytext:
 #     text_representation:
 #       extension: .py
-#       format_name: light
-#       format_version: '1.5'
+#       format_name: percent
+#       format_version: '1.3'
 #       jupytext_version: 1.16.6
 #   kernel_info:
 #     name: python3
@@ -14,12 +14,13 @@
 #     name: python3
 # ---
 
+# %% [markdown]
 # # Parameter-Efficient Finetuning (PEFT) with Low-Level Adaptation (LORA) using HuggingFace PEFT on a single GPU
 
-# + jupyter={"outputs_hidden": false, "source_hidden": false} nteract={"transient": {"deleting": false}}
+# %% jupyter={"outputs_hidden": false, "source_hidden": false} nteract={"transient": {"deleting": false}}
 # %pip install -q -r requirements.txt
 
-# + gather={"logged": 1721941151683}
+# %% gather={"logged": 1721941151683}
 # input constants
 import os
 
@@ -36,7 +37,7 @@ TRAINING_LEARNING_RATE = float(os.getenv("TRAINING_LEARNING_RATE"))
 TRAINING_DEVICE = "gpu" # one of ["cpu", "gpu", "mps"]
 
 LORA_TARGET_MODULES=[
-    "q", 
+    "q",
     "v"
 ]
 LORA_R = int(os.getenv("LORA_R"))
@@ -49,7 +50,7 @@ HUGGINGFACE_REPO_ID = os.getenv("HUGGINGFACE_REPO_ID")
 if TRAINING_DEVICE == "gpu":
     os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
 
-# + gather={"logged": 1721941154263}
+# %% gather={"logged": 1721941154263}
 print(f"HF pretrained model name: {HF_PRETRAINED_MODEL_NAME}")
 print(f"HF dataset name: {HF_DATASET_NAME}")
 
@@ -63,16 +64,16 @@ print(f"LORA droupout: {LORA_DROPOUT}")
 
 print(f"Using {TRAINING_DEVICE} device")
 
-# + [markdown] nteract={"transient": {"deleting": false}}
+# %% [markdown] nteract={"transient": {"deleting": false}}
 # # Download Training Data
 
-# + gather={"logged": 1721941186999}
+# %% gather={"logged": 1721941186999}
 # download datasets: train, validation, test
 from datasets import load_dataset
 
 dataset = load_dataset(HF_DATASET_NAME)  # doctest: +IGNORE_RESULT
 
-# + gather={"logged": 1721941187076}
+# %% gather={"logged": 1721941187076}
 import json
 
 print(f"dataset: {list(dataset)}")
@@ -85,17 +86,17 @@ print(f"train dataset features: {dataset["train"].features}")
 print(f"topics ({len(topics)} unique), first 10: {[topics.pop() for i in range(10)]}")
 for i in range(3):
     print(f"Example ({i}): {json.dumps(dataset["train"][i], indent=2)}")
-# -
 
+# %% [markdown]
 # # Model and Tokenizer
 
-# + gather={"logged": 1721941320624}
+# %% gather={"logged": 1721941320624}
 # download tokenizer
 from transformers import T5Tokenizer
 
 tokenizer = T5Tokenizer.from_pretrained(HF_PRETRAINED_MODEL_NAME)
 
-# + gather={"logged": 1721941324149}
+# %% gather={"logged": 1721941324149}
 # download model
 from transformers import T5ForConditionalGeneration
 
@@ -104,7 +105,7 @@ base_model = T5ForConditionalGeneration.from_pretrained(
 )
 base_model
 
-# + gather={"logged": 1721941329974}
+# %% gather={"logged": 1721941329974}
 # test inference
 input_text = dataset["train"][0]["dialogue"]
 print(f"==INPUT TEXT==:\n{input_text}")
@@ -114,11 +115,10 @@ print(f"==OUTPUT==:\n{tokenizer.decode(outputs[0])}")
 print(f"==EXPECTED==:\n{dataset["train"][0]["summary"]}")
 
 
-# -
-
+# %% [markdown]
 # # Fine-tuning configuration
 
-# + gather={"logged": 1721941374429}
+# %% gather={"logged": 1721941374429}
 # tokenize the dataset
 # Hugging Face Transformers models expect tokenized input, 
 # rather than the text in the downloaded data.
@@ -138,11 +138,11 @@ def tokenize_dataset(dataset):
     return dataset
 
 encoded_dataset = dataset.map(
-    tokenize_dataset, 
+    tokenize_dataset,
     batched=True,
     remove_columns=["id", "topic", "dialogue", "summary"])
 
-# + gather={"logged": 1721941377208}
+# %% gather={"logged": 1721941377208}
 import json
 
 print(f"encoded dataset: {list(encoded_dataset)}")
@@ -153,7 +153,7 @@ print(f"train dataset features: {encoded_dataset["train"].features}")
 for i in range(3):
     print(f"Example ({i}): {json.dumps(encoded_dataset["train"][i], indent=2)}")
 
-# + gather={"logged": 1721941379641}
+# %% gather={"logged": 1721941379641}
 # configure LoRA
 from peft import LoraConfig, TaskType
 
@@ -165,26 +165,27 @@ peft_config = LoraConfig(
     lora_dropout=LORA_DROPOUT,
 )
 
-# + gather={"logged": 1721941381663}
+# %% gather={"logged": 1721941381663}
 # wrap model with PEFT config
 from peft import get_peft_model
 
 peft_wrapped_model = get_peft_model(base_model, peft_config)
 peft_wrapped_model.print_trainable_parameters()
-# -
 
+# %% [markdown]
 # # Training Job
 
+# %% [markdown]
 # ## Training with Transformers for Pytorch
 
-# + gather={"logged": 1721941386203}
+# %% gather={"logged": 1721941386203}
 # data loader/collator to batch input in training and evaluation datasets
 from transformers import DataCollatorWithPadding
 
 data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
-# + gather={"logged": 1721941388782} jupyter={"outputs_hidden": false, "source_hidden": false} nteract={"transient": {"deleting": false}}
-# configure evaluation metrics 
+# %% gather={"logged": 1721941388782} jupyter={"outputs_hidden": false, "source_hidden": false} nteract={"transient": {"deleting": false}}
+# configure evaluation metrics
 # in addition to the default `loss` metric that the `Trainer` computes
 import evaluate
 import numpy as np
@@ -197,14 +198,14 @@ def compute_metrics(eval_pred, evaluation_module=evaluation_module):
     return evaluation_module.compute(predictions=predictions, references=labels)
 
 
-# + gather={"logged": 1721941393185} jupyter={"outputs_hidden": false, "source_hidden": false} nteract={"transient": {"deleting": false}}
+# %% gather={"logged": 1721941393185} jupyter={"outputs_hidden": false, "source_hidden": false} nteract={"transient": {"deleting": false}}
 # [OPTIONAL] clean up the GPU memory
 if TRAINING_DEVICE == "gpu":
     from numba import cuda
     device = cuda.get_current_device()
     device.reset()
 
-# + gather={"logged": 1721941393339}
+# %% gather={"logged": 1721941393339}
 # train job config
 # Hugging Face training configuration tools can be used to configure a Trainer.
 from transformers import TrainingArguments
@@ -232,7 +233,7 @@ training_args = TrainingArguments(
     use_cpu=TRAINING_DEVICE == "cpu"  # False will use CUDA or MPS if available
 )
 
-# + gather={"logged": 1721941396223}
+# %% gather={"logged": 1721941396223}
 # The Trainer classes require the user to provide: 1) Metrics 2) A base model 3) A training configuration
 from transformers import Trainer
 
@@ -246,13 +247,13 @@ trainer = Trainer(
     # compute_metrics=compute_metrics
 )
 
-# + gather={"logged": 1721941403821}
+# %% gather={"logged": 1721941403821}
 trainer.train()
-# -
 
+# %% [markdown]
 # # Store Model
 
-# + gather={"logged": 1721939469374}
+# %% gather={"logged": 1721939469374}
 # save model
 import os
 
@@ -260,7 +261,7 @@ os.makedirs(OUTPUT_DIRECTORY, exist_ok=True)
 peft_wrapped_model.save_pretrained(OUTPUT_DIRECTORY)
 tokenizer.save_pretrained(OUTPUT_DIRECTORY)
 
-# + gather={"logged": 1721939469382}
+# %% gather={"logged": 1721939469382}
 # save on Huggingface
 from huggingface_hub import notebook_login
 
