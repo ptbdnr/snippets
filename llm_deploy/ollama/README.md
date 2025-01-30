@@ -1,12 +1,14 @@
-# Ollama: Install
-ref.
+# Ollama
+
+## Install
+ref. https://ollama.com/download
 
 install Ollama on Linux
 ```bash
 sudo curl -fsSL https://ollama.com/install.sh | sh
 ```
 
-# Ollama: Serve model
+## Launch a Server
 ref. https://ollama.com/library
 
 Llama CodeLlama 7/13/34/70B: https://ollama.com/library/codellama
@@ -127,9 +129,9 @@ sudo service ollama stop
 ```
 
 
-# Ollama: Connect remotely
+## Connect remotely
 
-## Via Azure network setting
+(This might not work behind firewall.)
 
 Open the Azure portal and navigate to the VM
 Select Networking
@@ -172,7 +174,7 @@ example:
 3: curl -X POST http://51.12.52.76:11434/api/generate -d '{"model": "llama3:70b", "prompt":"write a auper long poem"}'
 
 
-## Via SSH address binding using `-L local_socket:host:hostport`
+### Via SSH address binding using `-L local_socket:host:hostport`
 
 We specify that connections to the given TCP port
 on the local (client) host are to be forwarded to
