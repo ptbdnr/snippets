@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 from azure.ai.projects import AIProjectClient
 from azure.ai.projects.models import CodeInterpreterTool
 from azure.identity import DefaultAzureCredential
@@ -11,6 +13,8 @@ from azure.identity import DefaultAzureCredential
 # To find your discovery_url, run the CLI command: az ml workspace show -n {project_name} --resource-group {resource_group_name} --query discovery_url
 # Project Connection example: eastus.api.azureml.ms;12345678-abcd-1234-9fc6-62780b3d3e05;my-resource-group;my-project-name
 # Customer needs to login to Azure subscription via Azure CLI and set the environment variables
+
+load_dotenv()
 
 project_client = AIProjectClient.from_connection_string(
     credential=DefaultAzureCredential(), conn_str=os.environ["PROJECT_CONNECTION_STRING"]
