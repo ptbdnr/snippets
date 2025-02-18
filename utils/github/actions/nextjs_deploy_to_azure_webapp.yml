@@ -1,0 +1,48 @@
+name: TEST - Next.js to Azure Web App - Build and Deploy 
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - test
+    paths:
+      - 'front/**'
+
+env:
+  WORKING_DIRECTORY: './front'
+  WEBAPP_NAME: "foo"
+  APPLICATION_PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_TEST }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+
+    - name: Install dependencies
+      working-directory: ${{ env.WORKING_DIRECTORY }}
+      run: npm install
+
+    - name: Build Next.js app
+      working-directory: ${{ env.WORKING_DIRECTORY }}
+      run: npm run build
+
+    - name: Move build output to root
+      working-directory: ${{ env.WORKING_DIRECTORY }}
+      run: |
+        mv ./build/static ./build/standalone/build
+        mv ./public ./build/standalone
+
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: ${{ env.WEBAPP_NAME }}
+        publish-profile: ${{ env.APPLICATION_PUBLISH_PROFILE }}
+        package: '${{ env.WORKING_DIRECTORY }}/build/standalone'
