@@ -6,7 +6,7 @@ param rLocation string
 var rNamePrefix = 'foo'
 var rNameSuffix = 'bar'
 
-func addPrefixAndSuffix(name string) string => '${main.rgNamePrefix}-${name}-${rNameSuffix}'
+func addPrefixAndSuffix(name string) string => '${rNamePrefix}-${name}-${rNameSuffix}'
 
 resource aiServices 'Microsoft.CognitiveServices/accounts@2024-06-01-preview' = {
   name: addPrefixAndSuffix('aiservices-tmp')
