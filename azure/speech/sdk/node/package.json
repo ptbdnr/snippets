@@ -1,0 +1,18 @@
+{
+  "name": "node",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^22.13.5",
+    "axios": "^1.8.1",
+    "microsoft-cognitiveservices-speech-sdk": "^1.42.0",
+    "universal-cookie": "^7.2.2"
+  }
+}
