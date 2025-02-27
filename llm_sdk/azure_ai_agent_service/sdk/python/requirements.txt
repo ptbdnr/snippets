@@ -1,0 +1,3 @@
+python-dotenv==1.0.1
+azure-ai-projects==1.0.0b5
+azure-identity==1.19.0
