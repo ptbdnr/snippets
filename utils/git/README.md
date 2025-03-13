@@ -1,3 +1,21 @@
+## git
+
+Use `git` for version control. Examples:
+
+```bash
+# Check the status of your repository
+git status
+
+# Stage changes for commit
+git add filename
+
+# Commit staged changes with a message
+git commit -m "Your commit message"
+
+# Push commits to a remote repository
+git push origin main
+```
+
 # Where can I learn more about Git?
 
 Resources:
