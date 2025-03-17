@@ -29,7 +29,11 @@ with st.form(key='rows') as f_input:
             st.text('output')
             st.write('input: ' + text_input)
         except Exception as ex:
-            logging.exception(ex)
+            st.toast(
+                body="An error occurred while processing the request.",
+                icon="⚠️",
+            )
+            logging.exception(msg=ex)
             st.exception(ex) 
 
 
@@ -45,13 +49,24 @@ with st.form(key='columns') as f_database:
     if button_a:
         try:
             st.toast('pressed button a')
+            st.toast("start processing", icon="⏳")
+            start_time = time.time()
             with st.spinner('querying only...'):
                 item_list = get_items()
+            end_time = time.time()
+            st.toast(
+                body=f"completed in {end_time - start_time:.2f} seconds",
+                icon="🎉",
+            )
             st.subheader('A list')
             st.write('A list')
             st.table(item_list)
         except Exception as ex:
-            logging.exception(ex)
+            st.toast(
+                body="An error occurred while processing the request.",
+                icon="⚠️",
+            )
+            logging.exception(msg=ex)
             st.exception(ex)
 
     if button_b:
@@ -63,7 +78,11 @@ with st.form(key='columns') as f_database:
                 st.write('B list')
                 st.table(item_list)
         except Exception as ex:
-            logging.exception(ex)
+            st.toast(
+                body="An error occurred while processing the request.",
+                icon="⚠️",
+            )
+            logging.exception(msg=ex)
             st.exception(ex)
 
 with st.form(key='callback') as f_callback:
@@ -77,7 +96,11 @@ with st.form(key='callback') as f_callback:
                 st.write(f'{buttonName} list')
                 st.table(item_list)
         except Exception as ex:
-            logging.exception(ex)
+            st.toast(
+                body="An error occurred while processing the request.",
+                icon="⚠️",
+            )
+            logging.exception(msg=ex)
             st.exception(ex)
 
     button_d = st.form_submit_button('button D', on_click=clickHandler, args=('D'))
