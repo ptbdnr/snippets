@@ -1,4 +1,5 @@
 # requirements.txt
 python-dotenv==1.0.1
-
 streamlit==1.39.0
+st-theme==1.2.3
+watchdog==6.0.0
