@@ -117,8 +117,8 @@ ref: https://learn.microsoft.com/en-us/azure/azure-functions/functions-deploy-co
 ref: https://learn.microsoft.com/en-us/cli/azure/acr?view=azure-cli-latest#az-acr-login
 
 ```shell
-# sign int ot the container registry instance. alternative: docker login $REGISTRY_NAME.azurecr.io
-az acr login --resource-group $RESOURCE_GROUP_NAME --name $REGISTRY_NAME
+# sign in to the container registry instance. alternative: az acr login --resource-group $RESOURCE_GROUP_NAME --name $REGISTRY_NAME
+docker login $REGISTRY_NAME.azurecr.io
 # tag the Docker image where `DOCKER_ID` is your Docker account Id, `LOGIN_SERVER` is the name of the registry login server (eg. $REGISTRY_NAME.azurecr.io), so that it can be pushed to the private registry. IMAGE_NAME may contain '/'. `TAG` is optional, default value is `latest`
 docker tag $DOCKER_ID/$IMAGE_NAME:$TAG $LOGIN_SERVER/$IMAGE_NAME:$TAG
 # pus the image to the registry instance
