@@ -73,12 +73,12 @@ class CosmosDBMongoDB(CosmosDBAbstract):
         """List databases."""
         return self.client.list_databases()
 
-    def set_collection_indices(
+    def create_collection_indices(
             self,
             collection_name: str,
             indices: list[tuple],
     ) -> None:
-        """Set collection indices.
+        """Create collection indices.
 
         Example indices: [("content_text", pymongo.TEXT)]
         """

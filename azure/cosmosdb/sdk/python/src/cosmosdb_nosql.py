@@ -61,31 +61,50 @@ class CosmosDBNoSQL(CosmosDBAbstract):
             user_agent_overwrite=True,
         )
 
-        try:
-            # Setup database
+    def create_container(
+            self,
+            indexing_policy: Optional[dict] = None,
+            vector_embedding_policy: Optional[dict] = None,
+            offer_throughput: Optional[int] = None,
+            drop_old_database: bool = False,
+            drop_old_container: bool = False,
+    ) -> ContainerProxy:
+        """Create a container."""
+        if self.client is None:
+            msg = "CosmosDB client not found"
+            raise ValueError(msg)
+        if self.db is None:
+            if drop_old_database:
+                self.client.delete_database(id=self.database_id)
             try:
                 self.db = self.client.create_database(id=self.database_id)
             except exceptions.CosmosResourceExistsError:
                 self.db = self.client.get_database_client(database=self.database_id)
-
-            # Setup container
+        if self.container is None:
+            if drop_old_container:
+                self.db.delete_container(id=self.container_id)
             try:
                 self.container = self.db.create_container(
                     id=self.container_id,
-                    partition_key=PartitionKey(path=self.partition_key))
+                    partition_key=PartitionKey(path=self.partition_key),
+                    indexing_policy=indexing_policy,
+                    vector_embedding_policy=vector_embedding_policy,
+                    offer_throughput=offer_throughput,
+                )
             except exceptions.CosmosResourceExistsError:
                 self.container = self.db.get_container_client(
                     container=self.container_id,
                 )
-        except exceptions.CosmosHttpResponseError as ex:
-            print(f"CosmosHttpResponseError: {ex.message}")
+        return self.container
 
     def list_databases(self) -> list:
         """List databases."""
+        self.create_container()
         return list(self.client.list_databases())
 
     def insert(self, payload: dict) -> dict:
         """Insert a payload."""
+        self.create_container()
         if "id" not in payload:
             msg = "The field 'id' is required in record."
             raise ValueError(msg)
@@ -93,25 +112,35 @@ class CosmosDBNoSQL(CosmosDBAbstract):
 
     def insert_many(self, payloads: list[dict]) -> list:
         """Insert many payloads."""
+        self.create_container()
         return [self.insert(payload) for payload in payloads]
 
     def read_all_items(self, max_item_count: Optional[int]) -> list:
         """Read all records."""
+        self.create_container()
         # NOTE: Use MaxItemCount on Options to control
         # how many items come back per trip to the server
         # Important to handle throttles whenever you are doing operations such
         # as this that might result in a 429 (throttled request)
         return list(self.container.read_all_items(max_item_count=max_item_count))
 
-    def query_items(self, query: str) -> list:
+    def query_items(
+            self,
+            query: str,
+            parameters: Optional[list] = None,
+            enable_cross_partition_query: bool = True,
+    ) -> list:
         """Query items."""
+        self.create_container()
         return list(self.container.query_items(
             query=query,
-            enable_cross_partition_query=True,
+            parameters=parameters,
+            enable_cross_partition_query=enable_cross_partition_query,
         ))
 
     def find(self, filter: Optional[dict]) -> list:
         """Find items."""
+        self.create_container()
         validated_fields = ", ".join("c." + f for f in ALLOWED_SELECT_FIELDS)
         query = "SELECT " + validated_fields + " FROM c"
         parameters = []
