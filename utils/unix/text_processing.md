@@ -30,6 +30,9 @@ grep -i "error" file.txt
 # Search recursively in a directory for "error"
 grep -r "error" /path/to/directory
 
+# Search recursively in a directory filtering for files filename.ext for "error"
+grep -r --include="filename.ext" "error" /path/to/directory
+
 # Search using a regular expression for lines starting with "start"
 grep "^start" file.txt
 ```
