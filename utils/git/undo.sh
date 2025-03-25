@@ -1,5 +1,8 @@
 # # Revert a change
 
+## revert file to a previous commit
+git checkout $COMMIT_ID -- path/to/file.ext
+
 # ## Undo local change (before staging)
 # see https://gitimmersion.com/lab_14.html
 
