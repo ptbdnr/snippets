@@ -1,12 +1,11 @@
 import logging
 import time
-from random import randint
 from typing import ClassVar
 
-from locust import FastHttpUser, between, task
+from locust import FastHttpUser, HttpUser, between, task
 
-API_BASE_URL = 'foo'
-API_KEY = 'key'
+API_BASE_URL = "foo"
+API_KEY = "key"
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -16,8 +15,36 @@ logger.addHandler(handler)
 
 logger.info("API_BASE_URL: %s", API_BASE_URL)
 
+class UILoadTest(HttpUser):
+    """Load test."""
 
-class QueryLoadTest(FastHttpUser):
+    weight = 1
+    wait_time = between(0.1, 0.1)
+    host = API_BASE_URL
+
+    def on_start(self) -> None:
+        """Start load test."""
+        logger.info("Starting load test")
+        logger.info("host: %s", self.host)
+
+    @task(1)
+    def ui_route(self) -> None:
+        """Loadtest UI /route."""
+        with self.client.get(
+            url="/page_route",
+            name="/page_route",
+        ) as response:
+            logger.info("Status code: %s", response.status_code)
+            if response.status_code == 200:
+                logger.info("Response content: %s", response.content)
+        time.sleep(0.1)
+
+    def on_stop(self) -> None:
+        """Stop load test."""
+        print("Stopping load test")
+
+
+class APILoadTest(FastHttpUser):
     """Load test."""
 
     weight = 1
