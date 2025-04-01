@@ -4,6 +4,16 @@
 
 ## Variable
 
+Create a new text file (`file.yaml`) using the following command:
+
+```bash
+cat << EOF > path/to/file.yaml
+parameter:
+    - value1
+    - value2
+EOF
+```
+
 Create a new script file (`foo.sh`) using the following command:
 
 ```bash
@@ -64,3 +74,50 @@ fi
 ```
 
 Run the script and test with and without providing input.
+
+## Loop and Default Value for User Input
+
+```bash
+PAYTHON_PATH=$(which python)
+for i in {1..15}; do
+  echo "Sending request $i..."
+  sleep 2
+done
+```
+
+path/to/
+
+### Using a for Loop (word-by-word)
+
+```bash
+# Read file content into a variable (this splits into words)
+# IFS = internal field separator
+# NB: zsh handles word splitting differently than bash
+cat << EOF > file.txt
+lineA
+lineB
+lineC
+EOF
+
+LINES=$(cat file.txt)
+IFS=$'\n'
+for line in $LINES; do
+    echo ".. $line .."
+done
+unset IFS
+```
+
+### Using a while Loop (line-by-line)
+
+```bash
+# This approach preserves each full line
+cat << EOF > file.txt
+line1
+line2
+line3
+EOF
+
+while IFS= read -r line; do
+  echo ".. $line .."
+done < file.txt
+```
