@@ -61,3 +61,58 @@ resource apimapi 'Microsoft.ApiManagement/service/apis@2024-05-01' = {
   }
 }
 output apimapiId string = apimapi.id
+
+// API for Function App integration (legacy approach)
+resource functionApi 'Microsoft.ApiManagement/service/apis@2021-12-01-preview' = {
+  parent: apiMgmt
+  name: addPrefixAndSuffix('func-api')
+  properties: {
+    displayName: 'Function App API'
+    path: 'functions'
+    protocols: [
+      'https'
+    ]
+    // Connects API Management to the Function App by using its hostname as the backend URL
+    serviceUrl: 'https://example.com'
+  }
+}
+
+// GET Operation
+resource functionApiGet 'Microsoft.ApiManagement/service/apis/operations@2021-12-01-preview' = {
+  name: addPrefixAndSuffix('func-api-get')
+  parent: functionApi
+  properties: {
+    displayName: 'Function GET Operation'
+    method: 'GET'
+    urlTemplate: '/get'
+    responses: [
+      {
+        statusCode: 200
+        description: 'Success'
+      }
+    ]
+  }
+}
+
+// POST Operation
+resource functionApiPost 'Microsoft.ApiManagement/service/apis/operations@2021-12-01-preview' = {
+  name: addPrefixAndSuffix('func-api-post')
+  parent: functionApi
+  properties: {
+    displayName: 'Function POST Operation'
+    method: 'POST'
+    urlTemplate: '/post'
+    request: {
+      // Optional: Define request details as needed
+      queryParameters: []
+      headers: []
+      representations: []
+    }
+    responses: [
+      {
+        statusCode: 200
+        description: 'Success'
+      }
+    ]
+  }
+}
