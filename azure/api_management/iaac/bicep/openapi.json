@@ -1,0 +1,131 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+      "title": "Some API",
+      "description": "API for something",
+      "version": "1.0.0"
+    },
+    "servers": [
+      {
+        "url": "https://foo.bar/baz"
+      }
+    ],
+    "paths": {
+      "/": {
+        "get": {
+          "summary": "Get all",
+          "description": "Retrieve all",
+          "responses": {
+            "200": {
+              "description": "Successful operation",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Records"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Records not found"
+            }
+          }
+        }
+      },
+      "/{_id}": {
+        "get": {
+          "summary": "Get one",
+          "description": "Retrieve one",
+          "parameters": [
+            {
+              "name": "_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful operation",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Record"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Record not found"
+            }
+          }
+        },
+        "put": {
+          "summary": "Update one",
+          "description": "Update one",
+          "parameters": [
+            {
+              "name": "_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordUpdate"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Record successfully updated"
+            },
+            "400": {
+              "description": "Invalid input"
+            },
+            "404": {
+              "description": "Record not found"
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "Records": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/Record"
+          }
+        },
+        "Record": {
+          "type": "object",
+          "properties": {
+            "_id": {
+              "type": "string"
+            },
+            "body": {
+              "type": "string"
+            }
+          }
+        },
+        "RecordUpdate": {
+          "type": "object",
+          "properties": {
+            "body": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
