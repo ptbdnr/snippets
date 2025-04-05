@@ -41,7 +41,7 @@ st.set_page_config(
     layout="wide",
 )
 
-if not check_password(f):
+if not check_password():
     st.stop()  # Do not continue if check_password is not True.
 
 theme = st_theme()
