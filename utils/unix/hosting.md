@@ -11,6 +11,6 @@ lsof -i :$PORT_NUMBER
 
 ```bash
 # teminate a process with id $PID
-kill-9 $PID
+kill -9 $PID
 ```
 
