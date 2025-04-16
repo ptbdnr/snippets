@@ -6,9 +6,15 @@ from dotenv import load_dotenv
 from streamlit_theme import st_theme
 
 from password import check_password
+from src.components.hello import component as hello_component
+from src.components.forms import component as forms_component
+from src.components.chat import component as chat_component
+from src.components.layout import component as layout_component
+from src.components.crud import component as crud_component
+
 
 # Load environment variables
-load_dotenv(".env.local")
+load_dotenv(".env")
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -20,6 +26,7 @@ def initialize_session_state() -> None:
     """Initialize the session state variables if they are not already set."""
     env_vars = {
         "FOO": "FOO",
+        "BAR": "BAR",
         "BAR": "BAR",
     }
     for var, env in env_vars.items():
@@ -41,8 +48,8 @@ st.set_page_config(
     layout="wide",
 )
 
-if not check_password(f):
-    st.stop()  # Do not continue if check_password is not True.
+# if not check_password():
+#     st.stop()  # Do not continue if check_password is not True.
 
 theme = st_theme()
 if theme and theme.get("base") == "dark":
@@ -52,6 +59,15 @@ if theme and theme.get("base") == "dark":
         link='https://en.wikipedia.org/wiki/Smiley',
     )
 
+component_map = {
+    "Hello": {"icon": "📙", "component": hello_component, "url_path": "hello"},
+    "Forms": {"icon": "📝", "component": forms_component, "url_path": "forms"},
+    "Chat": {"icon": "💬", "component": chat_component, "url_path": "chat"},
+    "Layout": {"icon": "📊", "component": layout_component, "url_path": "layout"},
+    "CRUD": {"icon": "🗂️", "component": crud_component, "url_path": "crud"},
+}
+DEFAULT_PAGE_TITLE = "Hello"
+
 # Main Streamlit app starts here
 
 # Header
@@ -60,21 +76,18 @@ with st.container():
     col1.image(
         image="media/Smiley.svg.png",
         caption="Smiley",
-        use_column_width=True,
+        use_container_width=True,
     )
     col2.title("Title")
     col2.subheader('v0.0.1')
 
 # Side panel navigation
+pages = [st.Page(page=c["component"], title=k, icon=c["icon"], url_path=c["url_path"], default=(k==DEFAULT_PAGE_TITLE)) 
+         for k, c in component_map.items()]
 pg = st.navigation(
-    pages=[
-        st.Page("pages/hello_world.py", title="HelloWord", icon=":material/thumb_up:", default=True),
-        st.Page("pages/forms.py", title="Forms", icon="📝"),
-        st.Page("pages/chat.py", title="Chat", icon="💬"),
-        st.Page("pages/layout.py", title="Layout", icon="📊"),
-    ],
-    # position="sidebar",
-    # expanded=True,
+    pages=pages,
+    position="sidebar",
+    expanded=True,
 )
 
 # Custom CSS
