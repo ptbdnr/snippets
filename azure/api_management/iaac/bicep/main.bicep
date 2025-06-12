@@ -17,8 +17,8 @@ resource apiMgmt 'Microsoft.ApiManagement/service@2024-05-01' = {
     capacity: 1
   }
   properties: {
-    publisherName: 'Kainos'
-    publisherEmail: 'peter.bodnar@kainos.com'
+    publisherName: 'PTBDNR'
+    publisherEmail: 'foo.bar@gmail.com'
   }
 }
 
