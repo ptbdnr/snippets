@@ -7,7 +7,7 @@ targetScope = 'resourceGroup'
 @description('Location for all resources')
 param rLocation string
 
-@description('Managed Identity Id (for example for Function App)`)
+@description('Managed Identity Id (for example for Function App)')
 param identityId string
 
 // ********************************************
