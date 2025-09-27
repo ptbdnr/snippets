@@ -22,7 +22,7 @@ wget http://example.com/file.zip
 wget -O newname.zip http://example.com/file.zip
 ```
 
-## curl
+## cURL
 `curl` is a tool for transferring data with URL syntax, supporting various protocols.
   
 ```bash
@@ -34,6 +34,18 @@ curl -o file.zip http://example.com/file.zip
 
 # Follow redirects while retrieving a file
 curl -L -o file.zip http://example.com/file.zip
+
+# query and API
+curl https://api.perplexity.ai/search \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": [
+      "What is Comet Browser?",
+      "Perplexity AI",
+      "Perplexity Changelog"
+    ]
+  }' | jq
 ```
 
 ## ssh
