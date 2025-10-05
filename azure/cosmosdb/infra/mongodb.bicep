@@ -23,57 +23,6 @@ func addPrefixAndSuffix(name string) string => '${main.rgNamePrefix}-${name}-${r
 // NEW RESOURCES
 // ********************************************
 
-// Cosmos DB - NoSQL
-
-// Cosmos DB for database
-resource nosql 'Microsoft.DocumentDB/databaseAccounts@2025-05-01-preview' = {
-  name: addPrefixAndSuffix('nosql')
-  location: rLocation
-  kind: 'GlobalDocumentDB'
-  properties: {
-    databaseAccountOfferType: 'Standard'
-    locations: [
-      {
-        locationName: rLocation
-        failoverPriority: 0
-      }
-    ]
-    networkAclBypass: 'None'
-    publicNetworkAccess: 'Enabled' // TODO: delete line
-    isVirtualNetworkFilterEnabled: false // TODO: change to true, and use virtualNetworkRules
-    // virtualNetworkRules: [
-    //   {
-    //     id: subnetId
-    //     ignoreMissingVNetServiceEndpoint: false
-    //   }
-    // ]
-  }
-}
-
-resource nosqlDatabase 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2025-05-01-preview' = {
-  parent: nosql
-  name: 'nosqldb'
-  properties: {
-    resource: {
-      id: 'nosqldb'
-    }
-  }
-}
-
-resource nosqlContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2025-05-01-preview' = {
-  parent: nosqlDatabase
-  name: 'nosqlcontainer'
-  properties: {
-    resource: {
-      id: 'nosqlcontainer'
-      partitionKey: {
-        paths: ['/pkey']
-        kind: 'Hash'
-      }
-    }
-  }
-}
-
 // Cosmos DB - MongoDB
 resource mongodb 'Microsoft.DocumentDB/databaseAccounts@2022-05-15' = {
   name: addPrefixAndSuffix('mongodb')
@@ -149,10 +98,10 @@ resource mongodbCollection 'Microsoft.DocumentDb/databaseAccounts/mongodbDatabas
 // ********************************************
 
 resource cosmosDBSQLRole 'Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions@2024-11-15' = {
-  name: guid(subscription().id, resourceGroup().id, nosqlAccount.id, 'cosmosDBSQLRole')
-  parent: nosqlAccount
+  name: guid(subscription().id, resourceGroup().id, mongodb.id, 'cosmosDBSQLRole')
+  parent: mongodb
   properties: {
-    roleName: 'Azure Cosmos DB SQL Role'
+    roleName: 'Azure Mongo DB SQL Role'
     type: 'CustomRole'
     permissions: [
       {
@@ -164,7 +113,7 @@ resource cosmosDBSQLRole 'Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitio
       }
     ]
     assignableScopes: [
-      nosqlAccount.id
+      mongodb.id
     ]
   }
 }
@@ -175,11 +124,11 @@ resource cosmosDBSQLRole 'Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitio
 
 // Grant the Itentity a read+write permission on the CosmosDB (formerly known as DocumentDB)
 resource roleAssignmentSQL 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2024-11-15' = {
-  name: guid(subscription().id, functionAppIdentityPrincipalId, nosqlAccount.id, 'cosmosDBSQLRole')
-  parent: nosqlAccount
+  name: guid(subscription().id, functionAppIdentityPrincipalId, mongodb.id, 'cosmosDBSQLRole')
+  parent: mongodb
   properties: {
     principalId: IdentityId
-    scope: nosqlAccount.id
+    scope: mongodb.id
     roleDefinitionId: cosmosDBSQLRole.id
   }
 }
@@ -188,8 +137,8 @@ resource roleAssignmentSQL 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignm
 // OUTPUTS
 // ********************************************
 
-output nosqlId string = nosql.id
-output nosqlName string = nosql.name
-output nosqlUrl string = nosql.properties.documentEndpoint
-output nosqlDatabaseId string = nosqlDatabase.id
-output nosqlContainerId string = nosqlCollection.id
+output mongodblId string = mongodb.id
+output mongodbName string = mongodb.name
+output mongodbUrl string = mongodb.properties.documentEndpoint
+output mongodbDatabaseId string = mongodbDatabase.id
+output mongodbContainerId string = mongodbCollection.id
