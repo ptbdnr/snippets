@@ -1,7 +1,7 @@
 import re
 from difflib import SequenceMatcher
 
-def character_similarity_ratio(self, text: str, subset: str, biggest_allowed_gap: int = 25) -> float:
+def character_similarity_ratio(self, text: str, subset: str, biggest_allowed_gap: int = 0) -> float:
     """Compute similarity ratio between a text and a subset with allowed fuzzy matching.
 
     Args:
