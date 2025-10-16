@@ -7,7 +7,7 @@ def character_similarity_ratio(self, text: str, subset: str, biggest_allowed_gap
     Args:
         text: The original text.
         subset: The subset string to validate.
-        biggest_allowed_gap: the biggest character offset between two exact sub-string
+        biggest_allowed_gap: characters to allow in between exact matching blocks
 
     Returns:
         float: character similarity ratio, best match length over subset length
