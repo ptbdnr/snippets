@@ -10,7 +10,7 @@ def character_similarity_ratio(self, text: str, subset: str, biggest_allowed_gap
         biggest_allowed_gap: the biggest character offset between two exact sub-string
 
     Returns:
-        bool: True if the subset is found within the text allowing for 5% character differences.
+        float: character similarity ratio, best match length over subset length
 
     """
     # Remove non-alphanumeric characters for comparison
