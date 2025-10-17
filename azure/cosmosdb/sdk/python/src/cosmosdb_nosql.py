@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Optional
 from azure.cosmos import exceptions
 from azure.cosmos.cosmos_client import CosmosClient
 from azure.cosmos.partition_key import PartitionKey
+from azure.identity import DefaultAzureCredential
 
 from src.cosmosdb_abstract import CosmosDBAbstract, CosmosDBConfig
 
@@ -54,12 +55,29 @@ class CosmosDBNoSQL(CosmosDBAbstract):
         self.partition_key = partition_key if partition_key else DEFAULT_PARTITION_KEY
 
         # Initialize the client
-        self.client = CosmosClient(
-            url=host,
-            credential={"masterKey": key},
-            user_agent="CosmosDBPython",
-            user_agent_overwrite=True,
-        )
+        if False:
+            connection_string = "nosql_connection_string"
+            self.client = CosmosClient.from_connection_string(connection_string)
+        elif False:
+            # running in cloud
+            # Auth: running in Azure host; using DefaultAzureCredential without interactive sources.
+            url = config["nosql_url"]
+            credential = DefaultAzureCredential(
+                exclude_interactive_browser_credential=True,
+                exclude_visual_studio_code_credential=True,
+                exclude_shared_token_cache_credential=True,
+                exclude_cli_credential=False,
+                exclude_powershell_credential=True,
+                exclude_developer_cli_credential=True,
+            )
+            self.client = CosmosClient(url=host, credential=credential)
+        else:
+            self.client = CosmosClient(
+                url=host,
+                credential={"masterKey": key},
+                user_agent="CosmosDBPython",
+                user_agent_overwrite=True,
+            )
 
     def create_container(
             self,
