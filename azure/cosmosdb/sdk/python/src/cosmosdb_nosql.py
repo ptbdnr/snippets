@@ -156,6 +156,10 @@ class CosmosDBNoSQL(CosmosDBAbstract):
             enable_cross_partition_query=enable_cross_partition_query,
         ))
 
+    def get_item(self, id: str, partition_key: str):
+        """Get specific item"""
+        return self.container.read_item(id, partition_key=partition_key)
+
     def find(self, filter: Optional[dict]) -> list:
         """Find items."""
         self.create_container()
