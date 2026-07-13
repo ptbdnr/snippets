@@ -1,0 +1,34 @@
+views 'logic' {
+    
+    view diagram1 {
+        title: "diagram1"
+        include User
+        include BackEnd
+        include DataStore
+        include SecretStore
+    }
+
+    view diagram2 extends diagram1 {
+        title: "diagram2"
+        include MessageQueue
+        include BackEnd.*
+        include DataStore.*
+    }
+
+    view diagram3 extends diagram2 {
+        title: "diagram3"
+        include element.kind != dataModel
+    }
+
+    dynamic view dynamicView1 {
+        title: "dynamicView1"
+        include User
+        include MessageQueue
+        include BackEnd.Orchestrator
+        include BackEnd.Feature
+
+        User -[async]-> MessageQueue "publish request"
+        MessageQueue -[async]-> BackEnd.Orchestrator "trigger processing"
+        BackEnd.Orchestrator -[sync]-> BackEnd.Feature "trigger processing"
+    }
+}
