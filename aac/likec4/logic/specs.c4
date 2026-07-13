@@ -1,0 +1,37 @@
+specification {
+  
+  // =======================================================
+  // LOGIC SPECS
+  // =======================================================
+  
+  element componentGroup {
+    notation "component group"
+    style {
+        border dashed
+    }
+  }
+  element component {
+    notation "component"
+    style {
+        border dotted
+    }
+  }
+
+  relationship sync {
+    line dashed 
+    head vee
+  }
+  relationship async {
+    line dashed 
+  }
+  relationship store {
+    line dotted
+    color blue
+    head none
+  }
+  relationship create {
+    color red
+    line solid
+    head vee
+  }
+}
