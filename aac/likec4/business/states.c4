@@ -1,0 +1,57 @@
+specification {
+
+  // =======================================================
+  // BUSINESS LOGIC SPECS
+  // =======================================================
+
+  element doc_state {
+    notation "state"
+    style {
+      color: secondary
+    }
+  }
+
+  relationship state_change {
+    notation "change"
+  }
+
+  tag action1 {
+    color #ff6600
+  }
+}
+
+model {
+
+    // =======================================================
+    // BUSINESS LOGIC MODEL
+    // =======================================================
+
+    // Actors
+    actor User {
+        style {
+            shape: person
+        }
+    }    
+    // Logical Components
+    doc_state Stage1 {
+        title: "Stage 1"
+    }
+    doc_state Stage2 {
+        title: "Stage 2"
+    }
+
+    Stage1 -[state_change]-> Stage2 {
+        #action1
+        title: "change"
+    }
+
+}
+
+views 'diag' {
+
+    view doc_state {
+        title 'Doc State Transitions'
+        include Stage1
+        include Stage2
+    }
+}
