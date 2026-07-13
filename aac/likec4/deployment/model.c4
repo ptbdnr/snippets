@@ -1,0 +1,124 @@
+model {
+
+    // =======================================================
+    // DEPLOYMENT MODEL
+    // =======================================================
+
+    DataStore.Database .implementedBy PostgresDB { title: "implemented by" }
+    DataStore.BlobStore .implementedBy CloudStorage { title: "implemented by" }
+    DataStore.LogStore .implementedBy Logs { title: "implemented by" }
+    
+    BackEnd .implementedBy Serverless { title: "implemented by" }
+    
+    AIServices .implementedBy AIVendor { title: "implemented by" }
+    
+    SecretStore .implementedBy SecretManagerService { title: "implemented by" }
+    
+}
+
+
+deployment {
+    env nonprod 'nonprod environment' {
+        rg resourceGroup 'Resource Group(s)' {
+
+            networkSecurityGroup = instanceOf NetworkSecurityGroup { #rg_core }
+            virtualNetwork .attached networkSecurityGroup "attached"
+            
+            routeTable = instanceOf RouteTable { #rg_core }
+            virtualNetwork .attached routeTable "attached"
+
+            postgresDNSZone = instanceOf PrivateDNSZone { #rg_core description 'for Postgres' }
+            postgresDNSZone .attached virtualNetwork "linked"
+            storageBlobDNSZone = instanceOf PrivateDNSZone { #rg_core description 'for Blob Storage' }
+            storageBlobDNSZone .attached virtualNetwork "linked"
+            serverlessDNSZone = instanceOf PrivateDNSZone { #rg_core description 'for Serverless' }
+            serverlessDNSZone .attached virtualNetwork "linked"
+            keyVaultDNSZone = instanceOf PrivateDNSZone { #rg_core description 'for Secret Management Service' }
+            keyVaultDNSZone .attached virtualNetwork "linked"
+            cognitiveDNSZone = instanceOf PrivateDNSZone { #rg_core description 'for AI Vedor' }
+            cognitiveDNSZone .attached virtualNetwork "linked"
+            storageQueueDNSZone = instanceOf PrivateDNSZone { #rg_core description 'for Queue Storage' }
+            storageQueueDNSZone .attached virtualNetwork "linked"
+
+            // STORAGE
+            postgresDB = instanceOf PostgresDB { #rg_data }
+            blobStorage = instanceOf BlobStorage { #rg_data }
+            
+            // AI SERVICES
+            chatModel = instanceOf AIVendor { #rg_application }
+
+            // TELEMETRY & LOG
+            LogsDashboard = instanceOf Logs { #rg_core }
+            
+            // network watcher + storage + collection rules            
+
+            // COMPUTE
+            serverlessEnvironment = instanceOf ServicePlan { #rg_core }
+            serverlessStorage = instanceOf CloudStorage { #rg_application description: "for code" }
+            serverless .attached serverlessStorage "attached"
+            secterManager = instanceOf SecretManagerService { #rg_core }
+            serverless -[sync]-> Loggs "telemetry & log"
+
+            vnet vnet 'VNet' {
+                icon: @/azure/10075-icon-service-Virtual-Networks-(Classic).svg
+
+                virtualNetwork = instanceOf VirtualNetwork { #rg_core }
+
+                subnet snet-nonprod 'Non-Prod Subnet' {
+                    
+                    // COMPUTE
+                    serverlessStorageBlobNVIC = instanceOf VirtualInterface { #rg_application }
+                    storageBlobDNSZone .route serverlessStorageBlobNVIC "route"
+                    serverlessStorageBlobPEP = instanceOf PrivateEndpoint { #rg_application }
+                    serverlessStorageBlobPEP .attached serverlessStorageBlobNVIC "attached"
+                    serverlessStorageBlobPEP -[route]-> serverlessStorage "route"
+
+                    keyVaultNVIC = instanceOf VirtualInterface { #rg_core }
+                    keyVaultDNSZone .route keyVaultNVIC "route"
+                    keyVaultPEP = instanceOf PrivateEndpoint { #rg_core }
+                    keyVaultPEP .attached keyVaultNVIC "attached"
+                    keyVaultPEP -[route]-> keyVault "route"
+
+                    // AI SERVICES
+                    chatModelNVIC = instanceOf VirtualInterface  { #rg_application}
+                    chatModelPEP = instanceOf PrivateEndpoint  { #rg_application}
+                    chatModelPEP .attached chatModelNVIC "attached"
+                    chatModelPEP -[route]-> AIVendor "route"
+                }
+
+                subnet snet-psql 'PostgreSQL Subnet' {
+                    // STORAGE
+                    blobNVIC = instanceOf VirtualInterface { #rg_data} // TODO
+                    storageBlobDNSZone .route blobNVIC "route"
+                    blobPEP = instanceOf PrivateEndpoint { #rg_data} // TODO
+                    blobPEP .attached blobNVIC "attached"
+                    blobPEP -[route]-> azureStorage "route"
+
+                    postgresDBNVIC = instanceOf VirtualInterface { #rg_data}
+                    postgresDNSZone -[route]-> postgresDBNVIC "route"
+                    postgresDBPEP = instanceOf PrivateEndpoint { #rg_data }
+                    postgresDBPEP .attached postgresDBNVIC "attached"
+                    postgresDBPEP -[route]-> postgresDB "route"
+                }
+
+                subnet snet-asp-shrd-vnetint 'ASP VNET Shared Integration Subnet' {
+                    description "outbound traffic from Serverless"
+                    // COMPUTE
+                    serverless = instanceOf serverless { #rg_application description: "with managed identity" }
+                    serverlessEnvironment .host serverless "host"
+                }
+
+                subnet snet-asp-shrd-pe 'ASP VNET Shared PEP Subnet' {
+                    description "private endpoints for Serverless"
+                    // COMPUTE
+                    serverlessNVIC = instanceOf VirtualInterface { #rg_application }
+                    serverlessDNSZone .route serverlessNVIC "route"
+                    serverlessPEP = instanceOf PrivateEndpoint  { #rg_application }
+                    serverlessPEP .attached serverlessNVIC "attached"
+                    serverlessPEP -[route]-> Serverless "route"
+                }
+
+            }
+        }
+    }
+}
