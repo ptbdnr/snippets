@@ -1,0 +1,130 @@
+model {
+
+    // =======================================================
+    // AZURE MODELS
+    // =======================================================
+
+    service VirtualNetwork {
+        title: "Virtual Network"
+        icon: @/10075-icon-service-Virtual-Networks-(Classic).svg
+    }
+
+    service ManagedIdentity {
+        title: "Managed Identity"
+        icon: @/10227-icon-service-Entra-Managed-Identities.svg
+    }
+
+    service RouteTable {
+        title: "Route Table"
+        icon: @/10082-icon-service-Route-Tables.svg
+    }
+
+    service PrivateDNSZone {
+        title: "Private DNS Zone"
+        icon: @/10064-icon-service-DNS-Zones.svg
+    }
+
+    service VirtualInterface {
+        title: "Virtual Interface"
+        description: "IP address"
+        icon: @/10080-icon-service-Network-Interfaces.svg
+    }
+
+    service PrivateEndpoint {
+        title: "Private Endpoint"
+        description: "private link"
+        icon: @/00427-icon-service-Private-Link.svg
+    }
+
+    service NetworkSecurityGroup {
+        title: "Network Security Group"
+    }
+
+    service NetworkWatcher {
+        title: "Network Watcher"
+        icon: @/10066-icon-service-Network-Watcher.svg
+    }
+
+    service NetworkWatcherFlowLog {
+        title: "Network Watcher Flow Log"
+        icon: @/10066-icon-service-Network-Watcher.svg
+    }
+
+    service DataCollectionRule {
+        title: "Data Collection Rule"
+    }
+
+    // =======================================================
+    // STORAGE SERVICES
+    // =======================================================
+
+    service AzureStorage {
+        title: "Azure Storage"
+        description: "file/blob storage"
+        icon: @/10086-icon-service-Storage-Accounts.svg
+        style {
+            shape: storage
+        }
+    }
+
+    service PostgresDB {
+        title: "PostgreSQL Database"
+        icon: tech:postgresql
+        style {
+            shape: storage
+        }
+    }
+
+    // =======================================================
+    // COMPUTE SERVICES
+    // =======================================================
+
+    service AppServicePlan {
+        title: "App Service Plan"
+        icon: @/00046-icon-service-App-Service-Plans.svg
+    }
+
+    service FunctionApp {
+        title: "Function App"
+        description: 'serverless compute'
+        icon: @/10029-icon-service-Function-Apps.svg
+    }
+
+    service LogAnalyticsWorkspace {
+        title: "Log Analytics Workspace"
+        icon: @/00009-icon-service-Log-Analytics-Workspaces.svg
+    }
+
+    service ApplicationInsights {
+        title: "Application Insights"
+        description: "temporary log store"
+        icon: @/00012-icon-service-Application-Insights.svg
+        style {
+            shape: storage
+        }
+    }
+
+    service KeyVault {
+        title: "Key Vault"
+        description: "secret store"
+        icon: @/10245-icon-service-Key-Vaults.svg
+    }
+
+    // =======================================================
+    // AI SERVICES
+    // =======================================================
+
+    service AzureDocumentIntelligence {
+        title: "Azure Document Intelligence"
+        description: "PDF/DOCX parsing"
+        icon: @/00819-icon-service-Form-Recognizers.svg
+    }
+
+    service AzureAIFoundry {
+        title: "Azure AI Foundry"
+        description: "LLM inference"
+        icon: @/03513-icon-service-AI-Studio.svg
+    }
+
+
+}
