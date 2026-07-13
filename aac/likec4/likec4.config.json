@@ -4,12 +4,12 @@
   "title": "Project",
   "imageAliases": {
     "@": "./images"
-  }
+  },
   "include": {
     "paths": [
       "./data",
       "./logic",
       "./deployment"
     ]
-  },
+  }
 }
