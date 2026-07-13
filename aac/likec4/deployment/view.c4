@@ -1,0 +1,46 @@
+views 'deployment' {
+    
+    view implementations {
+        title: "implementations"
+        include DataStore.Database
+        include PostgresDB
+
+        include DataStore.BlobStore
+        include CloudStorage
+
+        include DataStore.LogStore
+        include Logs
+
+        include BackEnd
+        include Serverless
+
+        include AIVendor
+        include ChatModel
+
+        include SecretManagentService
+        include KeyVault
+    }
+
+    deployment view nonprodOverview {
+        title: "nonprod / overview"
+        include nonprod.*
+        include nonprod.resourceGroup.*
+        include nonprod.resourceGroup.snet-asp-shrd-vnetint.*
+    }
+
+    deployment view rg_core {
+        title: "rg_core"
+        include element.tag == #rg_core
+    }
+
+    deployment view rg_data {
+        title: "rg_data"
+        include element.tag == #rg_data
+    }
+
+    deployment view rg_application {
+        title: "rg_application"
+        include element.tag == #rg_application
+    }
+
+}
