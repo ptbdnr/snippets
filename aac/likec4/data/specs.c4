@@ -1,0 +1,26 @@
+specification {
+
+  // =======================================================
+  // DATA SPECS
+  // =======================================================
+
+  element dataModel {
+    notation "data model"
+    style {
+        shape: document
+    }
+  }
+  
+  relationship one-to-one {
+    line dotted 
+    color blue
+    head dot
+    tail dot
+  }
+  relationship one-to-many {
+    line dotted 
+    color blue
+    head crow
+    tail dot
+  }
+}
