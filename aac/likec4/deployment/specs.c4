@@ -1,0 +1,46 @@
+specification {
+  
+  // =======================================================
+  // DEPLOYMENT SPECS
+  // =======================================================
+  
+  deploymentNode env {
+    notation "environment"
+  }
+  deploymentNode rg {
+    notation "resource group"
+  }
+  deploymentNode vnet {
+    notation "vnet"
+  }
+  deploymentNode subnet {
+    notation "subnet"
+  }
+
+  relationship implementedBy {
+    line solid
+    head dot
+    tail dot
+  }
+  relationship host {
+    line dashed 
+  }
+  relationship attached {
+    line solid
+    head dot
+    tail dot 
+  }
+  relationship route {
+    line dashed 
+  }
+
+  tag rg_core { 
+    color #0000ff
+  }
+  tag rg_data {
+    color #808080
+  }
+  tag rg_application {
+    color #ff0000
+  }
+}
