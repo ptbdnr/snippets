@@ -1,0 +1,9 @@
+views 'data' {
+
+    view data_view {
+        title: "data_view"
+        include Doc
+        include Attribute
+    }
+
+}
