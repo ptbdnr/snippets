@@ -1,0 +1,12 @@
+model {
+
+    // =======================================================
+    // MS365 MODELS
+    // =======================================================
+
+    service PowerBIDesktop {
+        title: "Power BI Desktop"
+        description: "Power BI Desktop"
+        icon: @/03332-icon-service-Power-BI-Embedded.svg
+    }
+}
