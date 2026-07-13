@@ -1,0 +1,28 @@
+model {
+
+    // =======================================================
+    // DATA MODEL
+    // =======================================================
+
+    dataModel Doc {
+        description: """
+        ### Doc
+        - id: string, primary key  
+        - attr1: string
+        - att2: boolean, nullable
+        - created_at: timestamp
+        """
+    }
+
+    dataModel Attribute {
+        description: """
+        ### Attribute in a Doc
+        - id: string, primary key
+        - doc_id: string, foreign key
+        - created_at: timestamp
+        """
+    }
+
+    Doc .one-to-many Attribute "1:N"
+    
+}
