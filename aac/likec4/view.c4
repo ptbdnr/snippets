@@ -1,0 +1,7 @@
+views 'other' {
+    view detailedDiagram {
+        title: "detailed diagram"
+        include *
+        include backend.*
+    }
+}
