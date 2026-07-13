@@ -1,0 +1,15 @@
+{
+  "$schema": "https://likec4.dev/schemas/config.json",
+  "name": "Project",
+  "title": "Project",
+  "imageAliases": {
+    "@": "./images"
+  }
+  "include": {
+    "paths": [
+      "./data",
+      "./logic",
+      "./deployment"
+    ]
+  },
+}
