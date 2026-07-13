@@ -1,0 +1,22 @@
+specification {
+  
+  // =======================================================
+  // SHARED SPECS
+  // =======================================================
+  
+  element actor {
+      notation "actor"
+  }
+  
+  element service {
+      notation "service"
+      style {
+        shape: rectangle
+        color sky
+      }
+  }
+
+  tag todo {
+    color #fbff00ff
+  }
+}
