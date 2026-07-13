@@ -3,4 +3,72 @@ model {
     // LOGIC MODEL
     // =======================================================
 
+    // Actors
+    actor User {
+        description: "User"
+        style {
+            shape: person
+        }
+    }
+
+    // Logical Components
+    componentGroup DataStore {
+        description: "Data Store"
+        component BlobStore {
+            title: "Blob Store"
+            description: "File store"
+            style {
+                shape: storage
+            }
+            BlobStore .store File { title: "store" }
+        }
+        component Database {
+            description: "Persistent data store"
+            style {
+                shape: storage
+            }
+            Database .store Record { title: "store" }
+        }
+        component LogStore {
+            title: "Log Store"
+            description: "Temporary log store"
+            style {
+                shape: storage
+            }
+        }
+    }
+
+    componentGroup BackEnd {
+        title: "Back End"
+        description: "Back End Compute"
+        component Orchestrator {
+            description: "Orchestrator"
+        }
+        component Feature {
+            description: "Feature"
+        }
+    }
+
+    service MessageQueue {
+        title: "Message Queue"
+        // icon: tech:azure_service_bus
+        style {
+            shape: queue
+        }
+    }
+
+    component SecretStore {
+        title: "Secret Store"
+        description: "Secret Store"
+    }
+
+    // Flows
+    User -[async]-> Orchestrator "trigger processing"
+    MessageQueue -[async]-> Orchestrator "trigger processing"
+    Orchestrator -[async]-> LogStore "log event"
+
+    Orchestrator -[async]-> Feature "trigger"
+    Feature -[sync]-> LogStore "log event"
+
+    Orchestrator -[async]-> MessageQueu "publish result"
 }
